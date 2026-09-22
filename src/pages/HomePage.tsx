@@ -4,7 +4,6 @@ import { useStore } from '../context/StoreContext';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Icon } from '../components/ui/icon';
-import { BadgeGroup } from '../components/ui/badge-group';
 import { Masonry, type MasonryItem } from '../components/ui/Masonry';
 import { FlowingMenu, type FlowingMenuItem } from '../components/ui/FlowingMenu';
 import { formatCurrency } from '../lib/utils';
@@ -89,52 +88,41 @@ const FLOWING_MENU_ITEMS: FlowingMenuItem[] = [
 ];
 
 export const HomePage: React.FC = () => {
-  const { packages, setIsSignInModalOpen } = useStore();
+  const { packages } = useStore();
 
   return (
-    <div className="relative space-y-24 py-4 font-sans">
-      {/* Hero Section */}
-      <section className="relative z-10 pt-6 sm:pt-12 pb-4 space-y-10">
-        <div className="text-center max-w-4xl mx-auto space-y-5">
-          <BadgeGroup
-            badge="NEW SEASON"
-            message="2026/2027 Winter &amp; Spring Private Expeditions Now Live"
-            href="/packages"
-            variant="brand"
-          />
+    <div className="relative space-y-28 py-6 font-sans">
+      {/* Hero Section Exactly Matching Screenshot */}
+      <section className="relative z-10 pt-10 sm:pt-20 pb-12 flex flex-col items-center justify-center text-center space-y-8 min-h-[55vh]">
+        {/* New Creative Components Badge */}
+        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-neutral-900/60 backdrop-blur-md border border-white/15 text-xs text-white/90 shadow-lg">
+          <span className="px-2 py-0.5 rounded-full bg-white text-black font-bold text-[10px] tracking-wider uppercase">
+            NEW
+          </span>
+          <span className="font-medium tracking-tight">Creative Components</span>
+        </div>
 
-          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-neutral-950 uppercase leading-none drop-shadow-xs">
-            Curated Journeys.
-            <br />
-            <span className="text-neutral-500 font-normal">Seamless Booking.</span>
-          </h1>
+        {/* Hero Title */}
+        <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white max-w-4xl mx-auto leading-[1.08] drop-shadow-sm">
+          Grainy gradient colors with soft motion.
+        </h1>
 
-          <p className="text-lg sm:text-xl text-neutral-800 font-medium leading-relaxed max-w-2xl mx-auto drop-shadow-xs">
-            Real-time multi-destination itinerary reservations, zero-overbooking guarantees, and automated payment orchestration powered by Spring Boot microservices.
-          </p>
+        <p className="text-base sm:text-lg text-white/80 font-normal max-w-xl mx-auto leading-relaxed drop-shadow-xs">
+          Curated luxury itineraries with real-time slot escrow, distributed sagas, and seamless booking.
+        </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <Link to="/packages">
-              <Button size="lg" variant="default" className="rounded-full gap-2 font-bold px-8 h-12 text-sm bg-black text-white hover:bg-neutral-800 shadow-xl hover:scale-102 transition-all">
-                <Icon name="travel_explore" size={18} />
-                <span>Explore All Tours</span>
-              </Button>
-            </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => setIsSignInModalOpen(true)}
-              className="rounded-full gap-2 font-semibold px-6 h-12 text-sm border-neutral-300 hover:border-black bg-white/95 backdrop-blur-md text-black shadow-sm"
-            >
-              <Icon name="login" size={18} />
-              <span>Sign In</span>
-            </Button>
-            <Link to="/about">
-              <Button size="lg" variant="ghost" className="rounded-full text-neutral-800 hover:text-black font-semibold text-sm bg-white/40 backdrop-blur-xs">
-                <span>Our Craft &amp; Ethos &rarr;</span>
-              </Button>
-            </Link>
-          </div>
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+          <Link to="/packages">
+            <button className="bg-white text-black font-semibold text-sm sm:text-base px-8 py-3.5 rounded-2xl shadow-xl hover:bg-neutral-100 hover:scale-102 transition-all cursor-pointer">
+              Get started
+            </button>
+          </Link>
+          <Link to="/about">
+            <button className="bg-white/15 backdrop-blur-md text-white border border-white/25 font-medium text-sm sm:text-base px-8 py-3.5 rounded-2xl hover:bg-white/25 transition-all cursor-pointer">
+              Learn more
+            </button>
+          </Link>
         </div>
       </section>
 

@@ -27,9 +27,9 @@ import FooterSection from './components/FooterSection';
 
 const AppLayout: React.FC = () => {
   return (
-    <div className="min-h-screen bg-slate-50/60 text-neutral-900 flex flex-col font-sans selection:bg-black selection:text-white relative">
-      {/* Full-Screen Grainient WebGL Background */}
-      <div className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden opacity-40">
+    <div className="min-h-screen text-white flex flex-col font-sans selection:bg-white selection:text-black relative">
+      {/* Full-Screen Grainient WebGL Background exactly matching screenshot */}
+      <div className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden">
         <Grainient
           color1="#223d41"
           color2="#ffffff"
@@ -54,8 +54,6 @@ const AppLayout: React.FC = () => {
           centerY={0.0}
           zoom={0.9}
         />
-        {/* Soft atmospheric clarity layer */}
-        <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px] pointer-events-none" />
       </div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
