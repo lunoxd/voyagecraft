@@ -91,47 +91,10 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="relative space-y-28 py-6 font-sans">
-      {/* Hero Section with Integrated Full-Width Photo Collage on Grainient */}
-      <section className="relative z-10 pt-6 sm:pt-14 pb-8 space-y-12">
-        <div className="flex flex-col items-center justify-center text-center space-y-6 max-w-4xl mx-auto px-4">
-          {/* Top Pill Badge */}
-          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-neutral-900/70 backdrop-blur-xl border border-white/20 text-xs text-white shadow-xl">
-            <span className="px-2 py-0.5 rounded-full bg-white text-black font-bold text-[10px] tracking-wider uppercase">
-              NEW SEASON
-            </span>
-            <span className="font-medium tracking-tight">2026/2027 Private Luxury Expeditions</span>
-          </div>
-
-          {/* Hero Main Headline */}
-          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.06] drop-shadow-md">
-            Curated Journeys.
-            <br />
-            <span className="text-white/80 font-normal">Soft Motion Luxury.</span>
-          </h1>
-
-          {/* Hero Subtitle Matter */}
-          <p className="text-base sm:text-xl text-white/85 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-sm">
-            Handcrafted trans-continental circuits across the Swiss Alps, Kyoto, Lofoten, and Dolomites with real-time seat lock escrows and instantaneous booking.
-          </p>
-
-          {/* Action Triggers */}
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
-            <Link to="/packages">
-              <button className="bg-white text-black font-semibold text-sm sm:text-base px-8 py-3.5 rounded-2xl shadow-2xl hover:bg-neutral-100 hover:scale-102 transition-all cursor-pointer flex items-center gap-2">
-                <span>Explore Expeditions</span>
-                <Icon name="arrow_forward" size={16} />
-              </button>
-            </Link>
-            <Link to="/about">
-              <button className="bg-white/15 backdrop-blur-xl text-white border border-white/25 font-medium text-sm sm:text-base px-8 py-3.5 rounded-2xl hover:bg-white/25 transition-all cursor-pointer">
-                Our Craft &amp; Ethos
-              </button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Seamless Full-Width Photo Collage directly in the Hero Section */}
-        <div className="relative w-full rounded-3xl overflow-hidden border border-white/15 bg-black/25 p-2 sm:p-4 backdrop-blur-xl shadow-2xl">
+      {/* Immersive Hero Section with Text Overlaid Directly on the Photos Collage */}
+      <section className="relative z-10 rounded-3xl overflow-hidden border border-white/20 bg-neutral-950/60 shadow-2xl min-h-[580px] sm:min-h-[660px] flex items-center justify-center">
+        {/* Underlying Photo Collage */}
+        <div className="absolute inset-0 z-0 opacity-50 pointer-events-auto filter brightness-90">
           <Masonry
             items={MASONRY_ITEMS}
             ease="power3.out"
@@ -143,6 +106,47 @@ export const HomePage: React.FC = () => {
             blurToFocus={true}
             colorShiftOnHover={false}
           />
+        </div>
+
+        {/* Ambient Dark Gradient Vignette Overlay for Crystal Clear Contrast */}
+        <div className="absolute inset-0 z-1 bg-gradient-to-t from-neutral-950/95 via-neutral-950/45 to-neutral-950/80 backdrop-blur-[2px] pointer-events-none" />
+
+        {/* Floating Content directly ON the Photos */}
+        <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-6 max-w-4xl mx-auto px-6 py-16 sm:py-24">
+          {/* Top Pill Badge */}
+          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/25 text-xs text-white shadow-xl">
+            <span className="px-2 py-0.5 rounded-full bg-white text-black font-bold text-[10px] tracking-wider uppercase">
+              NEW SEASON
+            </span>
+            <span className="font-medium tracking-tight">2026/2027 Private Luxury Expeditions</span>
+          </div>
+
+          {/* Hero Main Headline */}
+          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.05] drop-shadow-lg">
+            Curated Journeys.
+            <br />
+            <span className="text-white/80 font-normal">Soft Motion Luxury.</span>
+          </h1>
+
+          {/* Hero Subtitle Matter */}
+          <p className="text-base sm:text-xl text-white/90 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-md">
+            Handcrafted trans-continental circuits across the Swiss Alps, Kyoto, Lofoten, and Dolomites with real-time seat lock escrows and instantaneous booking.
+          </p>
+
+          {/* Action Triggers */}
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <Link to="/packages">
+              <button className="bg-white text-black font-semibold text-sm sm:text-base px-8 py-3.5 rounded-2xl shadow-2xl hover:bg-neutral-100 hover:scale-102 transition-all cursor-pointer flex items-center gap-2">
+                <span>Explore Expeditions</span>
+                <Icon name="arrow_forward" size={16} />
+              </button>
+            </Link>
+            <Link to="/about">
+              <button className="bg-white/20 backdrop-blur-xl text-white border border-white/30 font-medium text-sm sm:text-base px-8 py-3.5 rounded-2xl hover:bg-white/30 transition-all cursor-pointer shadow-lg">
+                Our Craft &amp; Ethos
+              </button>
+            </Link>
+          </div>
         </div>
       </section>
 
