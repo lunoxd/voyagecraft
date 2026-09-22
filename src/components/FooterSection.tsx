@@ -40,7 +40,7 @@ const links = [
 
 export default function FooterSection() {
   return (
-    <footer className="border-t border-neutral-200/80 bg-white py-16 md:py-24 text-neutral-500 mt-20">
+    <footer className="border-t border-white/10 bg-neutral-950/40 backdrop-blur-2xl py-16 md:py-24 text-white/70 mt-24">
       <div className="mx-auto max-w-5xl px-6">
         {/* Brand Emblem */}
         <Link
@@ -48,10 +48,10 @@ export default function FooterSection() {
           aria-label="go home"
           className="mx-auto flex flex-col items-center gap-2 size-fit group"
         >
-          <div className="h-10 w-10 rounded-full bg-black text-white flex items-center justify-center font-bold shadow-sm group-hover:scale-105 transition-transform p-2">
+          <div className="h-10 w-10 rounded-full bg-white/10 border border-white/20 text-white flex items-center justify-center font-bold shadow-sm group-hover:scale-105 transition-transform p-2">
             <BrandLogo size={20} className="text-white" />
           </div>
-          <span className="text-sm font-black tracking-tight text-neutral-950 uppercase">
+          <span className="text-sm font-black tracking-tight text-white uppercase">
             VoyageCraft
           </span>
         </Link>
@@ -62,7 +62,7 @@ export default function FooterSection() {
             <Link
               key={index}
               to={link.href}
-              className="text-neutral-500 hover:text-neutral-950 block duration-150 transition-colors"
+              className="text-white/70 hover:text-white block duration-150 transition-colors"
             >
               <span>{link.title}</span>
             </Link>
@@ -74,49 +74,49 @@ export default function FooterSection() {
           <Link
             to="#"
             aria-label="Share"
-            className="text-neutral-400 hover:text-neutral-950 block transition-colors duration-150 p-2 hover:bg-neutral-100 rounded-full"
+            className="text-white/60 hover:text-white block transition-colors duration-150 p-2 hover:bg-white/10 rounded-full"
           >
             <Share2 className="size-5" />
           </Link>
           <Link
             to="#"
             aria-label="Community Messaging"
-            className="text-neutral-400 hover:text-neutral-950 block transition-colors duration-150 p-2 hover:bg-neutral-100 rounded-full"
+            className="text-white/60 hover:text-white block transition-colors duration-150 p-2 hover:bg-white/10 rounded-full"
           >
             <MessageCircle className="size-5" />
           </Link>
           <Link
             to="#"
             aria-label="Direct Link"
-            className="text-neutral-400 hover:text-neutral-950 block transition-colors duration-150 p-2 hover:bg-neutral-100 rounded-full"
+            className="text-white/60 hover:text-white block transition-colors duration-150 p-2 hover:bg-white/10 rounded-full"
           >
             <LinkIcon className="size-5" />
           </Link>
           <Link
             to="#"
             aria-label="Global Network"
-            className="text-neutral-400 hover:text-neutral-950 block transition-colors duration-150 p-2 hover:bg-neutral-100 rounded-full"
+            className="text-white/60 hover:text-white block transition-colors duration-150 p-2 hover:bg-white/10 rounded-full"
           >
             <Globe className="size-5" />
           </Link>
           <Link
             to="#"
             aria-label="Send Dispatch"
-            className="text-neutral-400 hover:text-neutral-950 block transition-colors duration-150 p-2 hover:bg-neutral-100 rounded-full"
+            className="text-white/60 hover:text-white block transition-colors duration-150 p-2 hover:bg-white/10 rounded-full"
           >
             <Send className="size-5" />
           </Link>
           <Link
             to="#"
             aria-label="Editorial Journal"
-            className="text-neutral-400 hover:text-neutral-950 block transition-colors duration-150 p-2 hover:bg-neutral-100 rounded-full"
+            className="text-white/60 hover:text-white block transition-colors duration-150 p-2 hover:bg-white/10 rounded-full"
           >
             <Feather className="size-5" />
           </Link>
         </div>
 
         {/* Copyright */}
-        <span className="text-neutral-400 block text-center text-xs font-mono">
+        <span className="text-white/40 block text-center text-xs font-mono">
           &copy; {new Date().getFullYear()} VoyageCraft Inc. All rights reserved.
         </span>
       </div>

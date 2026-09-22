@@ -43,7 +43,7 @@ export const PackagesPage: React.FC = () => {
   return (
     <div className="space-y-12 py-8 font-sans">
       {/* Section Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-neutral-200 pb-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
         <div className="space-y-3">
           <BadgeGroup
             badge="PACKAGE SERVICE"
@@ -51,10 +51,10 @@ export const PackagesPage: React.FC = () => {
             variant="brand"
             showArrow={false}
           />
-          <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-neutral-950 uppercase">
+          <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-white uppercase">
             Curated Journeys
           </h1>
-          <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
+          <p className="text-sm sm:text-base text-white/70 max-w-2xl">
             Real-time multi-destination itinerary catalog with atomic seat quota enforcement and zero-overbooking guarantees.
           </p>
         </div>
@@ -63,7 +63,7 @@ export const PackagesPage: React.FC = () => {
           <Button
             variant="default"
             onClick={() => setIsAddPackageModalOpen(true)}
-            className="rounded-full gap-2 text-xs font-bold h-11 px-6 bg-black text-white hover:bg-neutral-800 shadow-sm"
+            className="rounded-full gap-2 text-xs font-bold h-11 px-6 bg-white text-black hover:bg-neutral-100 shadow-md"
           >
             <Icon name="add" size={18} />
             <span>Create New Tour</span>
@@ -74,16 +74,16 @@ export const PackagesPage: React.FC = () => {
       {/* Filter & Search Bar */}
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
         <div className="relative w-full sm:w-80">
-          <Icon name="search" size={18} className="absolute left-4 top-3 text-neutral-400" />
+          <Icon name="search" size={18} className="absolute left-4 top-3 text-white/40" />
           <Input
             placeholder="Search destinations or cities..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-11 h-11 rounded-full bg-white border-neutral-200 text-xs font-mono placeholder:text-neutral-400 focus:bg-white shadow-2xs"
+            className="pl-11 h-11 rounded-full bg-white/10 border-white/15 text-xs font-mono placeholder:text-white/40 text-white focus:bg-white/15 shadow-md"
           />
         </div>
 
-        {/* Untitled UI Segmented Category Filter Pills */}
+        {/* Segmented Category Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
           {[
             { id: 'ALL', label: 'All Catalog' },
@@ -97,8 +97,8 @@ export const PackagesPage: React.FC = () => {
               onClick={() => setCategoryFilter(cat.id)}
               className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 categoryFilter === cat.id
-                  ? 'bg-black text-white font-bold shadow-sm'
-                  : 'bg-white border border-neutral-200 text-neutral-600 hover:text-black hover:bg-neutral-100'
+                  ? 'bg-white text-black font-bold shadow-md'
+                  : 'bg-white/10 border border-white/15 text-white/70 hover:text-white hover:bg-white/20'
               }`}
             >
               {cat.label}
@@ -107,7 +107,7 @@ export const PackagesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Packages Grid or Untitled UI Empty State */}
+      {/* Packages Grid or Empty State */}
       {filteredPackages.length === 0 ? (
         <EmptyState
           icon="search_off"
@@ -129,31 +129,30 @@ export const PackagesPage: React.FC = () => {
             return (
               <div
                 key={pkg.id}
-                className="rounded-3xl bg-white hover:bg-neutral-50/50 transition-all flex flex-col justify-between overflow-hidden border border-neutral-200/90 group shadow-xs hover:shadow-md"
+                className="rounded-3xl bg-neutral-900/60 backdrop-blur-xl hover:bg-neutral-900/80 transition-all flex flex-col justify-between overflow-hidden border border-white/15 group shadow-2xl hover:border-white/30"
               >
                 {/* Tour Photo Banner */}
                 {pkg.imageUrl && (
-                  <div className="relative aspect-16/9 w-full overflow-hidden bg-neutral-200">
+                  <div className="relative aspect-16/9 w-full overflow-hidden bg-neutral-900">
                     <img
                       src={pkg.imageUrl}
                       alt={pkg.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-4 left-4 flex items-center gap-2">
-                      <span className="px-3 py-1 rounded-full bg-black/70 backdrop-blur-md text-white font-mono text-xs font-bold">
+                      <span className="px-3 py-1 rounded-full bg-black/80 backdrop-blur-md text-white font-mono text-xs font-bold border border-white/20">
                         {pkg.code}
                       </span>
-                      <Badge
-                        className={`rounded-full text-[10px] font-bold border ${getCategoryColor(pkg.category)}`}
-                      >
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono border backdrop-blur-md ${getCategoryColor(pkg.category)}`}>
                         {pkg.category.replace('_', ' ')}
-                      </Badge>
+                      </span>
                     </div>
-                    <div className="absolute top-4 right-4">
+
+                    <div className="absolute bottom-4 right-4">
                       <Badge
                         variant={isSoldOut ? "destructive" : "success"}
                         showDot
-                        className="rounded-full text-[10px] shadow-sm"
+                        className="rounded-full text-[10px]"
                       >
                         {isSoldOut ? "SOLD OUT" : `${availableSlots} SEATS LEFT`}
                       </Badge>
@@ -161,57 +160,55 @@ export const PackagesPage: React.FC = () => {
                   </div>
                 )}
 
-                <div className="p-8 space-y-4 flex-1 flex flex-col justify-between">
+                <div className="p-8 space-y-6 flex-1 flex flex-col justify-between">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-1">
-                        <h2 className="text-2xl sm:text-3xl font-black leading-tight text-black group-hover:underline">{pkg.title}</h2>
-                        <p className="text-xs text-neutral-600 font-medium">{pkg.subtitle}</p>
+                      <div>
+                        <h3 className="text-2xl font-black text-white tracking-tight group-hover:underline">
+                          {pkg.title}
+                        </h3>
+                        <p className="text-xs text-white/70 font-medium mt-1">{pkg.subtitle}</p>
                       </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-[11px] text-neutral-500 font-mono">From</div>
-                        <div className="text-2xl font-black text-black font-mono">{formatCurrency(pkg.basePrice)}</div>
-                        <div className="text-[10px] text-neutral-400">/ traveler</div>
+                      <div className="text-right font-mono shrink-0">
+                        <div className="text-xs text-white/50">Base Tier</div>
+                        <div className="text-2xl font-black text-white">{formatCurrency(pkg.basePrice)}</div>
                       </div>
                     </div>
 
-                    <p className="text-xs text-neutral-600 leading-relaxed line-clamp-2">
+                    <p className="text-xs text-white/75 leading-relaxed line-clamp-2">
                       {pkg.description}
                     </p>
 
-                    {/* Multi-Destination Itinerary Ribbon */}
-                    <div className="space-y-2 pt-1">
-                      <div className="text-[11px] font-bold text-neutral-600 uppercase tracking-wider flex items-center gap-1.5 font-mono">
-                        <Icon name="route" size={14} />
-                        {pkg.durationDays} Days / {pkg.destinations.reduce((acc, d) => acc + d.nights, 0)} Nights
-                      </div>
+                    {/* Circuit Stops */}
+                    <div className="space-y-2">
+                      <div className="text-[11px] font-mono text-white/50 uppercase tracking-wider">Circuit Route:</div>
                       <div className="flex flex-wrap items-center gap-2">
                         {pkg.destinations.map((dest, i) => (
                           <React.Fragment key={dest.city}>
-                            <span className="px-3 py-1 rounded-full bg-neutral-100 text-xs text-neutral-800 font-medium shadow-2xs border border-neutral-200/60">
-                              {dest.city} <span className="text-neutral-400 font-mono text-[10px]">({dest.nights}n)</span>
+                            <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-medium text-white shadow-xs border border-white/15">
+                              {dest.city} <span className="text-white/50 font-mono text-[10px]">({dest.nights}n)</span>
                             </span>
                             {i < pkg.destinations.length - 1 && (
-                              <span className="text-neutral-400 text-xs">&rarr;</span>
+                              <span className="text-white/40 text-xs">&rarr;</span>
                             )}
                           </React.Fragment>
                         ))}
                       </div>
                     </div>
 
-                    {/* Live Quota Bar */}
-                    <div className="space-y-2 pt-2">
+                    {/* Atomic Slot Quota Progress Bar */}
+                    <div className="space-y-1.5 pt-2">
                       <div className="flex items-center justify-between text-xs font-mono">
-                        <span className="text-neutral-600">Remaining Slots</span>
-                        <span className="font-bold text-black">{availableSlots} / {pkg.totalCapacity} Available ({occupancyRate}% Booked)</span>
+                        <span className="text-white/60">Inventory Quota Allocation</span>
+                        <span className="font-bold text-white">{pkg.bookedSlots} / {pkg.totalCapacity} Booked ({occupancyRate}%)</span>
                       </div>
-                      <Progress value={pkg.bookedSlots} max={pkg.totalCapacity} className="h-2 bg-neutral-100" />
+                      <Progress value={occupancyRate} className="h-1.5 bg-white/10" />
                     </div>
 
                     {/* Admin Capacity Adjuster */}
                     {currentUser.role === 'ADMIN' && (
                       <div className="pt-2 flex items-center justify-between gap-2 text-xs font-mono">
-                        <span className="text-neutral-500">Admin Capacity Adjuster:</span>
+                        <span className="text-white/60">Admin Capacity Adjuster:</span>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => updatePackageCapacity(pkg.id, Math.max(pkg.bookedSlots, pkg.totalCapacity - 1))}

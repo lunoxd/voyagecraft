@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Icon } from '../components/ui/icon';
 import { Masonry, type MasonryItem } from '../components/ui/Masonry';
@@ -131,26 +130,26 @@ export const HomePage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full bg-black text-white text-[10px] font-bold font-mono tracking-wider uppercase">
+              <span className="px-2.5 py-0.5 rounded-full bg-white/20 border border-white/30 text-white text-[10px] font-bold font-mono tracking-wider uppercase backdrop-blur-md">
                 Dynamic GSAP Grid
               </span>
-              <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider">React Bits</span>
+              <span className="text-xs font-mono text-white/60 uppercase tracking-wider">React Bits</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-neutral-950 uppercase">
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white uppercase">
               Expedition Poster Gallery
             </h2>
-            <p className="text-xs sm:text-sm text-neutral-600 mt-1 max-w-xl">
+            <p className="text-xs sm:text-sm text-white/70 mt-1 max-w-xl">
               Fluid multi-column masonry gallery capturing analog film stills across the Swiss Alps, Kyoto, Lofoten, and Dolomites.
             </p>
           </div>
-          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 bg-white/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-neutral-200/80 shrink-0">
-            <Icon name="touch_app" size={14} className="text-black" />
+          <div className="flex items-center gap-2 text-xs font-mono text-white/80 bg-white/10 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20 shrink-0 shadow-lg">
+            <Icon name="touch_app" size={14} className="text-white" />
             <span>Click any item to view expedition</span>
           </div>
         </div>
 
         {/* Masonry Container */}
-        <div className="relative w-full rounded-3xl overflow-hidden border border-neutral-200/80 bg-neutral-900/5 p-3 sm:p-4 backdrop-blur-xs">
+        <div className="relative w-full rounded-3xl overflow-hidden border border-white/15 bg-black/20 p-3 sm:p-4 backdrop-blur-xl shadow-2xl">
           <Masonry
             items={MASONRY_ITEMS}
             ease="power3.out"
@@ -169,12 +168,12 @@ export const HomePage: React.FC = () => {
       <section className="relative z-10 space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <div className="text-xs font-mono text-neutral-500 uppercase tracking-wider mb-1">Featured Expeditions</div>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-neutral-950 uppercase">
+            <div className="text-xs font-mono text-white/60 uppercase tracking-wider mb-1">Featured Expeditions</div>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white uppercase">
               Handcrafted Multi-City Itineraries
             </h2>
           </div>
-          <Link to="/packages" className="text-xs font-bold text-black hover:underline flex items-center gap-1 font-mono">
+          <Link to="/packages" className="text-xs font-bold text-white/90 hover:text-white hover:underline flex items-center gap-1 font-mono">
             <span>View all {packages.length} tours</span>
             <Icon name="arrow_forward" size={14} />
           </Link>
@@ -188,18 +187,18 @@ export const HomePage: React.FC = () => {
             return (
               <div
                 key={pkg.id}
-                className="rounded-3xl bg-white hover:bg-neutral-50/60 transition-all flex flex-col justify-between overflow-hidden group border border-neutral-200/90 shadow-xs hover:shadow-md"
+                className="rounded-3xl bg-neutral-900/60 backdrop-blur-xl hover:bg-neutral-900/80 transition-all flex flex-col justify-between overflow-hidden group border border-white/15 shadow-2xl hover:border-white/30"
               >
                 {/* Tour Photo Banner */}
                 {pkg.imageUrl && (
-                  <div className="relative aspect-16/9 w-full overflow-hidden bg-neutral-200">
+                  <div className="relative aspect-16/9 w-full overflow-hidden bg-neutral-900">
                     <img
                       src={pkg.imageUrl}
                       alt={pkg.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-4 left-4 flex items-center gap-2">
-                      <span className="px-3 py-1 rounded-full bg-black/70 backdrop-blur-md text-white font-mono text-xs font-bold">
+                      <span className="px-3 py-1 rounded-full bg-black/80 backdrop-blur-md text-white font-mono text-xs font-bold border border-white/20">
                         {pkg.code}
                       </span>
                       <Badge
@@ -217,18 +216,18 @@ export const HomePage: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <h3 className="text-2xl font-black text-black tracking-tight group-hover:underline">
+                        <h3 className="text-2xl font-black text-white tracking-tight group-hover:underline">
                           {pkg.title}
                         </h3>
-                        <p className="text-xs text-neutral-600 font-medium mt-1">{pkg.subtitle}</p>
+                        <p className="text-xs text-white/70 font-medium mt-1">{pkg.subtitle}</p>
                       </div>
                       <div className="text-right font-mono shrink-0">
-                        <div className="text-xs text-neutral-500">From</div>
-                        <div className="text-2xl font-black text-black">{formatCurrency(pkg.basePrice)}</div>
+                        <div className="text-xs text-white/50">From</div>
+                        <div className="text-2xl font-black text-white">{formatCurrency(pkg.basePrice)}</div>
                       </div>
                     </div>
 
-                    <p className="text-xs text-neutral-600 leading-relaxed line-clamp-2">
+                    <p className="text-xs text-white/75 leading-relaxed line-clamp-2">
                       {pkg.description}
                     </p>
 
@@ -236,26 +235,26 @@ export const HomePage: React.FC = () => {
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                       {pkg.destinations.map((dest, i) => (
                         <React.Fragment key={dest.city}>
-                          <span className="px-3 py-1 rounded-full bg-neutral-100 text-xs font-medium text-neutral-800 shadow-2xs border border-neutral-200/60">
-                            {dest.city} <span className="text-neutral-400 font-mono text-[10px]">({dest.nights}n)</span>
+                          <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-medium text-white shadow-xs border border-white/15">
+                            {dest.city} <span className="text-white/50 font-mono text-[10px]">({dest.nights}n)</span>
                           </span>
                           {i < pkg.destinations.length - 1 && (
-                            <span className="text-neutral-400 text-xs">&rarr;</span>
+                            <span className="text-white/40 text-xs">&rarr;</span>
                           )}
                         </React.Fragment>
                       ))}
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-neutral-200 flex items-center justify-between mt-4">
-                    <div className="text-xs text-neutral-500 font-mono">
-                      Departure: <strong className="text-black">{pkg.departureDates[0]}</strong>
+                  <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-4">
+                    <div className="text-xs text-white/60 font-mono">
+                      Departure: <strong className="text-white">{pkg.departureDates[0]}</strong>
                     </div>
                     <Link to={`/packages/${pkg.id}`}>
-                      <Button variant="default" size="sm" className="rounded-full bg-black text-white hover:bg-neutral-800 text-xs font-bold px-4 h-9 shadow-sm">
+                      <button className="rounded-2xl bg-white text-black hover:bg-neutral-100 text-xs font-bold px-5 py-2.5 shadow-lg transition-all cursor-pointer flex items-center gap-1.5">
                         <span>Reserve Tour</span>
-                        <Icon name="arrow_forward" size={14} className="ml-1" />
-                      </Button>
+                        <Icon name="arrow_forward" size={14} />
+                      </button>
                     </Link>
                   </div>
                 </div>
@@ -270,33 +269,33 @@ export const HomePage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full bg-black text-white text-[10px] font-bold font-mono tracking-wider uppercase">
+              <span className="px-2.5 py-0.5 rounded-full bg-white/20 border border-white/30 text-white text-[10px] font-bold font-mono tracking-wider uppercase backdrop-blur-md">
                 Interactive Marquee
               </span>
-              <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider">React Bits</span>
+              <span className="text-xs font-mono text-white/60 uppercase tracking-wider">React Bits</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-neutral-950 uppercase">
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white uppercase">
               Circuit Directory
             </h2>
-            <p className="text-xs sm:text-sm text-neutral-600 mt-1 max-w-xl">
+            <p className="text-xs sm:text-sm text-white/70 mt-1 max-w-xl">
               Hover along the compass directions to reveal kinetic panoramic previews and direct booking routes.
             </p>
           </div>
-          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 bg-white/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-neutral-200/80 shrink-0">
-            <Icon name="navigation" size={14} className="text-black" />
+          <div className="flex items-center gap-2 text-xs font-mono text-white/80 bg-white/10 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20 shrink-0 shadow-lg">
+            <Icon name="navigation" size={14} className="text-white" />
             <span>Hover across rows to reveal motion marquee</span>
           </div>
         </div>
 
-        <div className="relative h-[440px] sm:h-[480px] rounded-3xl overflow-hidden border border-neutral-800 shadow-2xl bg-neutral-950">
+        <div className="relative h-[440px] sm:h-[480px] rounded-3xl overflow-hidden border border-white/15 shadow-2xl bg-neutral-950/70 backdrop-blur-xl">
           <FlowingMenu
             items={FLOWING_MENU_ITEMS}
             speed={14}
-            bgColor="#0a0a0a"
+            bgColor="rgba(19, 34, 37, 0.7)"
             textColor="#f5f5f5"
             marqueeBgColor="#ffffff"
-            marqueeTextColor="#0a0a0a"
-            borderColor="rgba(255, 255, 255, 0.1)"
+            marqueeTextColor="#132225"
+            borderColor="rgba(255, 255, 255, 0.15)"
           />
         </div>
       </section>
@@ -304,17 +303,17 @@ export const HomePage: React.FC = () => {
       {/* Visual Expeditions Gallery Grid */}
       <section className="relative z-10 space-y-6">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <div className="text-xs font-mono text-neutral-500 uppercase tracking-wider">Visual Journals</div>
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-neutral-950 uppercase">
+          <div className="text-xs font-mono text-white/60 uppercase tracking-wider">Visual Journals</div>
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white uppercase">
             Analog Film Captures
           </h2>
-          <p className="text-xs sm:text-sm text-neutral-600">
+          <p className="text-xs sm:text-sm text-white/70">
             Natural lighting and organic 35mm grain captured across European, Asian, and Nordic expeditions.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="group rounded-3xl overflow-hidden bg-white border border-neutral-200/90 shadow-xs hover:shadow-md flex flex-col transition-all">
+          <div className="group rounded-3xl overflow-hidden bg-neutral-900/60 backdrop-blur-xl border border-white/15 shadow-2xl hover:border-white/30 flex flex-col transition-all">
             <div className="aspect-4/3 overflow-hidden">
               <img
                 src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=800&auto=format&fit=crop"
@@ -322,17 +321,17 @@ export const HomePage: React.FC = () => {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
             </div>
-            <div className="p-5 space-y-1 bg-white">
+            <div className="p-5 space-y-1 bg-neutral-950/40">
               <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-rose-700 font-bold uppercase">Kyoto, Japan</span>
-                <span className="text-neutral-400">Fujichrome</span>
+                <span className="text-rose-400 font-bold uppercase">Kyoto, Japan</span>
+                <span className="text-white/40">Fujichrome</span>
               </div>
-              <h4 className="font-bold text-sm text-black">Arashiyama Sanctuary &amp; Maple Garden</h4>
-              <p className="text-xs text-neutral-500">Autumn tea ceremony pavilion with stone pathway.</p>
+              <h4 className="font-bold text-sm text-white">Arashiyama Sanctuary &amp; Maple Garden</h4>
+              <p className="text-xs text-white/60">Autumn tea ceremony pavilion with stone pathway.</p>
             </div>
           </div>
 
-          <div className="group rounded-3xl overflow-hidden bg-white border border-neutral-200/90 shadow-xs hover:shadow-md flex flex-col transition-all">
+          <div className="group rounded-3xl overflow-hidden bg-neutral-900/60 backdrop-blur-xl border border-white/15 shadow-2xl hover:border-white/30 flex flex-col transition-all">
             <div className="aspect-4/3 overflow-hidden">
               <img
                 src="https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?q=80&w=800&auto=format&fit=crop"
@@ -340,17 +339,17 @@ export const HomePage: React.FC = () => {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
             </div>
-            <div className="p-5 space-y-1 bg-white">
+            <div className="p-5 space-y-1 bg-neutral-950/40">
               <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-emerald-700 font-bold uppercase">Lofoten, Norway</span>
-                <span className="text-neutral-400">ISO 800 Film</span>
+                <span className="text-emerald-400 font-bold uppercase">Lofoten, Norway</span>
+                <span className="text-white/40">ISO 800 Film</span>
               </div>
-              <h4 className="font-bold text-sm text-black">Arctic Aurora &amp; Fjord Rorbu</h4>
-              <p className="text-xs text-neutral-500">Traditional stilt cabin reflecting emerald northern lights.</p>
+              <h4 className="font-bold text-sm text-white">Arctic Aurora &amp; Fjord Rorbu</h4>
+              <p className="text-xs text-white/60">Traditional stilt cabin reflecting emerald northern lights.</p>
             </div>
           </div>
 
-          <div className="group rounded-3xl overflow-hidden bg-white border border-neutral-200/90 shadow-xs hover:shadow-md flex flex-col sm:col-span-2 lg:col-span-1 transition-all">
+          <div className="group rounded-3xl overflow-hidden bg-neutral-900/60 backdrop-blur-xl border border-white/15 shadow-2xl hover:border-white/30 flex flex-col sm:col-span-2 lg:col-span-1 transition-all">
             <div className="aspect-4/3 overflow-hidden">
               <img
                 src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800&auto=format&fit=crop"
@@ -358,13 +357,13 @@ export const HomePage: React.FC = () => {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
             </div>
-            <div className="p-5 space-y-1 bg-white">
+            <div className="p-5 space-y-1 bg-neutral-950/40">
               <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-amber-700 font-bold uppercase">Dolomites, Italy</span>
-                <span className="text-neutral-400">Kodak Portra</span>
+                <span className="text-amber-400 font-bold uppercase">Dolomites, Italy</span>
+                <span className="text-white/40">Kodak Portra</span>
               </div>
-              <h4 className="font-bold text-sm text-black">Alpine Sunrise Chalet Terrace</h4>
-              <p className="text-xs text-neutral-500">Morning light kissing snow peaks and wooden balcony.</p>
+              <h4 className="font-bold text-sm text-white">Alpine Sunrise Chalet Terrace</h4>
+              <p className="text-xs text-white/60">Morning light kissing snow peaks and wooden balcony.</p>
             </div>
           </div>
         </div>
