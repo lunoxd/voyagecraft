@@ -91,65 +91,47 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="relative space-y-28 py-6 font-sans">
-      {/* Hero Section Exactly Matching Screenshot */}
-      <section className="relative z-10 pt-10 sm:pt-20 pb-12 flex flex-col items-center justify-center text-center space-y-8 min-h-[55vh]">
-        {/* New Creative Components Badge */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-neutral-900/60 backdrop-blur-md border border-white/15 text-xs text-white/90 shadow-lg">
-          <span className="px-2 py-0.5 rounded-full bg-white text-black font-bold text-[10px] tracking-wider uppercase">
-            NEW
-          </span>
-          <span className="font-medium tracking-tight">Creative Components</span>
-        </div>
-
-        {/* Hero Title */}
-        <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white max-w-4xl mx-auto leading-[1.08] drop-shadow-sm">
-          Grainy gradient colors with soft motion.
-        </h1>
-
-        <p className="text-base sm:text-lg text-white/80 font-normal max-w-xl mx-auto leading-relaxed drop-shadow-xs">
-          Curated luxury itineraries with real-time slot escrow, distributed sagas, and seamless booking.
-        </p>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-          <Link to="/packages">
-            <button className="bg-white text-black font-semibold text-sm sm:text-base px-8 py-3.5 rounded-2xl shadow-xl hover:bg-neutral-100 hover:scale-102 transition-all cursor-pointer">
-              Get started
-            </button>
-          </Link>
-          <Link to="/about">
-            <button className="bg-white/15 backdrop-blur-md text-white border border-white/25 font-medium text-sm sm:text-base px-8 py-3.5 rounded-2xl hover:bg-white/25 transition-all cursor-pointer">
-              Learn more
-            </button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Animated Masonry Gallery from React Bits at the Top of Landing Page */}
-      <section className="relative z-10 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full bg-white/20 border border-white/30 text-white text-[10px] font-bold font-mono tracking-wider uppercase backdrop-blur-md">
-                Dynamic GSAP Grid
-              </span>
-              <span className="text-xs font-mono text-white/60 uppercase tracking-wider">React Bits</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white uppercase">
-              Expedition Poster Gallery
-            </h2>
-            <p className="text-xs sm:text-sm text-white/70 mt-1 max-w-xl">
-              Fluid multi-column masonry gallery capturing analog film stills across the Swiss Alps, Kyoto, Lofoten, and Dolomites.
-            </p>
+      {/* Hero Section with Integrated Full-Width Photo Collage on Grainient */}
+      <section className="relative z-10 pt-6 sm:pt-14 pb-8 space-y-12">
+        <div className="flex flex-col items-center justify-center text-center space-y-6 max-w-4xl mx-auto px-4">
+          {/* Top Pill Badge */}
+          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-neutral-900/70 backdrop-blur-xl border border-white/20 text-xs text-white shadow-xl">
+            <span className="px-2 py-0.5 rounded-full bg-white text-black font-bold text-[10px] tracking-wider uppercase">
+              NEW SEASON
+            </span>
+            <span className="font-medium tracking-tight">2026/2027 Private Luxury Expeditions</span>
           </div>
-          <div className="flex items-center gap-2 text-xs font-mono text-white/80 bg-white/10 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20 shrink-0 shadow-lg">
-            <Icon name="touch_app" size={14} className="text-white" />
-            <span>Click any item to view expedition</span>
+
+          {/* Hero Main Headline */}
+          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.06] drop-shadow-md">
+            Curated Journeys.
+            <br />
+            <span className="text-white/80 font-normal">Soft Motion Luxury.</span>
+          </h1>
+
+          {/* Hero Subtitle Matter */}
+          <p className="text-base sm:text-xl text-white/85 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-sm">
+            Handcrafted trans-continental circuits across the Swiss Alps, Kyoto, Lofoten, and Dolomites with real-time seat lock escrows and instantaneous booking.
+          </p>
+
+          {/* Action Triggers */}
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
+            <Link to="/packages">
+              <button className="bg-white text-black font-semibold text-sm sm:text-base px-8 py-3.5 rounded-2xl shadow-2xl hover:bg-neutral-100 hover:scale-102 transition-all cursor-pointer flex items-center gap-2">
+                <span>Explore Expeditions</span>
+                <Icon name="arrow_forward" size={16} />
+              </button>
+            </Link>
+            <Link to="/about">
+              <button className="bg-white/15 backdrop-blur-xl text-white border border-white/25 font-medium text-sm sm:text-base px-8 py-3.5 rounded-2xl hover:bg-white/25 transition-all cursor-pointer">
+                Our Craft &amp; Ethos
+              </button>
+            </Link>
           </div>
         </div>
 
-        {/* Masonry Container */}
-        <div className="relative w-full rounded-3xl overflow-hidden border border-white/15 bg-black/20 p-3 sm:p-4 backdrop-blur-xl shadow-2xl">
+        {/* Seamless Full-Width Photo Collage directly in the Hero Section */}
+        <div className="relative w-full rounded-3xl overflow-hidden border border-white/15 bg-black/25 p-2 sm:p-4 backdrop-blur-xl shadow-2xl">
           <Masonry
             items={MASONRY_ITEMS}
             ease="power3.out"
@@ -157,7 +139,7 @@ export const HomePage: React.FC = () => {
             stagger={0.05}
             animateFrom="bottom"
             scaleOnHover={true}
-            hoverScale={0.95}
+            hoverScale={0.96}
             blurToFocus={true}
             colorShiftOnHover={false}
           />
