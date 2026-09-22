@@ -28,34 +28,34 @@ import FooterSection from './components/FooterSection';
 const AppLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50/60 text-neutral-900 flex flex-col font-sans selection:bg-black selection:text-white relative">
-      {/* Full-Screen Sky Blue & White Mix Grainient Background */}
-      <div className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden">
+      {/* Full-Screen Grainient WebGL Background */}
+      <div className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden opacity-40">
         <Grainient
-          color1="#FFFFFF"
-          color2="#38BDF8"
-          color3="#BAE6FD"
-          timeSpeed={0.2}
-          colorBalance={0.1}
-          warpStrength={0.85}
-          warpFrequency={4.5}
-          warpSpeed={1.8}
-          warpAmplitude={45.0}
-          blendAngle={25.0}
-          blendSoftness={0.08}
-          rotationAmount={380.0}
+          color1="#223d41"
+          color2="#ffffff"
+          color3="#132225"
+          timeSpeed={0.25}
+          colorBalance={0.0}
+          warpStrength={1.0}
+          warpFrequency={5.0}
+          warpSpeed={2.0}
+          warpAmplitude={50.0}
+          blendAngle={0.0}
+          blendSoftness={0.05}
+          rotationAmount={500.0}
           noiseScale={2.0}
-          grainAmount={0.06}
-          grainScale={2.2}
-          grainAnimated={true}
-          contrast={1.25}
+          grainAmount={0.1}
+          grainScale={2.0}
+          grainAnimated={false}
+          contrast={1.5}
           gamma={1.0}
-          saturation={1.15}
+          saturation={1.0}
           centerX={0.0}
           centerY={0.0}
           zoom={0.9}
         />
         {/* Soft atmospheric clarity layer */}
-        <div className="absolute inset-0 bg-white/30 backdrop-blur-[1px] pointer-events-none" />
+        <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px] pointer-events-none" />
       </div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
