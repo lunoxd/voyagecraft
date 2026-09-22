@@ -91,30 +91,11 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="relative space-y-28 py-6 font-sans">
-      {/* Hero Section with Photographic Masonry as the Background */}
-      <section className="relative z-10 min-h-[75vh] flex items-center justify-center py-12 px-4 overflow-hidden rounded-3xl">
-        {/* Photos Layer in the Hero Background */}
-        <div className="absolute inset-0 z-0 pointer-events-auto opacity-40 filter brightness-90">
-          <Masonry
-            items={MASONRY_ITEMS}
-            ease="power3.out"
-            duration={0.6}
-            stagger={0.05}
-            animateFrom="bottom"
-            scaleOnHover={true}
-            hoverScale={0.97}
-            blurToFocus={false}
-            colorShiftOnHover={false}
-          />
-        </div>
-
-        {/* Ambient Radial Vignette for Contrast & Text Readability */}
-        <div className="absolute inset-0 z-1 bg-radial from-neutral-950/40 via-neutral-950/75 to-neutral-950/95 pointer-events-none" />
-
-        {/* Hero Content floating directly on top of the background photos */}
-        <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-6 max-w-4xl mx-auto py-12">
+      {/* Hero Section with React Bits Interactive Photo Masonry Grid */}
+      <section className="relative z-10 pt-6 sm:pt-14 pb-8 space-y-12">
+        <div className="flex flex-col items-center justify-center text-center space-y-6 max-w-4xl mx-auto px-4">
           {/* Top Pill Badge */}
-          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/25 text-xs text-white shadow-2xl">
+          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/20 text-xs text-white shadow-xl">
             <span className="px-2 py-0.5 rounded-full bg-white text-black font-bold text-[10px] tracking-wider uppercase">
               NEW SEASON
             </span>
@@ -129,12 +110,12 @@ export const HomePage: React.FC = () => {
           </h1>
 
           {/* Hero Subtitle Matter */}
-          <p className="text-base sm:text-xl text-white/90 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-lg">
+          <p className="text-base sm:text-xl text-white/90 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-md">
             Handcrafted trans-continental circuits across the Swiss Alps, Kyoto, Lofoten, and Dolomites with real-time seat lock escrows and instantaneous booking.
           </p>
 
           {/* Action Triggers */}
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
             <Link to="/packages">
               <button className="bg-white text-black font-semibold text-sm sm:text-base px-8 py-3.5 rounded-2xl shadow-2xl hover:bg-neutral-100 hover:scale-102 transition-all cursor-pointer flex items-center gap-2">
                 <span>Explore Expeditions</span>
@@ -142,11 +123,26 @@ export const HomePage: React.FC = () => {
               </button>
             </Link>
             <Link to="/about">
-              <button className="bg-white/20 backdrop-blur-xl text-white border border-white/30 font-medium text-sm sm:text-base px-8 py-3.5 rounded-2xl hover:bg-white/30 transition-all cursor-pointer shadow-lg">
+              <button className="bg-white/15 backdrop-blur-xl text-white border border-white/25 font-medium text-sm sm:text-base px-8 py-3.5 rounded-2xl hover:bg-white/25 transition-all cursor-pointer">
                 Our Craft &amp; Ethos
               </button>
             </Link>
           </div>
+        </div>
+
+        {/* Full React Bits Interactive Masonry Photo Grid with Hover Zoom & Blur */}
+        <div className="w-full pt-4">
+          <Masonry
+            items={MASONRY_ITEMS}
+            ease="power3.out"
+            duration={0.6}
+            stagger={0.05}
+            animateFrom="bottom"
+            scaleOnHover={true}
+            hoverScale={0.95}
+            blurToFocus={true}
+            colorShiftOnHover={false}
+          />
         </div>
       </section>
 
