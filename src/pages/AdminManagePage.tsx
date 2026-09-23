@@ -1,7 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import type { LoadBalancerStrategy } from '../types';
+
+interface MetricPoint {
+  time: string;
+  latency: number;
+  cpu: number;
+  rps: number;
+}
+
+// Generates smooth Catmull-Rom / Bezier spline path for SVG
+function createSmoothCurve(data: number[], width: number = 500, height: number = 110, maxVal: number = 100): { linePath: string; areaPath: string; points: Array<{ x: number; y: number; val: number }> } {
+  if (!data || data.length === 0) return { linePath: '', areaPath: '', points: [] };
+
+  const paddingY = 8;
+  const usableHeight = height - paddingY * 2;
+  const stepX = width / Math.max(1, data.length - 1);
+
+  const pts = data.map((val, idx) => {
+    const clampedVal = Math.max(0, Math.min(maxVal, val));
+    const normalizedY = 1 - clampedVal / (maxVal || 1);
+    return {
+      x: Math.round(idx * stepX * 10) / 10,
+      y: Math.round((paddingY + normalizedY * usableHeight) * 10) / 10,
+      val
+    };
+  });
+
+  if (pts.length === 1) {
+    return {
+      linePath: `M 0,${pts[0].y} L ${width},${pts[0].y}`,
+      areaPath: `M 0,${pts[0].y} L ${width},${pts[0].y} L ${width},${height} L 0,${height} Z`,
+      points: pts
+    };
+  }
+
+  let linePath = `M ${pts[0].x},${pts[0].y}`;
+
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i];
+    const p1 = pts[i + 1];
+    const cpX1 = p0.x + (p1.x - p0.x) * 0.45;
+    const cpY1 = p0.y;
+    const cpX2 = p0.x + (p1.x - p0.x) * 0.55;
+    const cpY2 = p1.y;
+
+    linePath += ` C ${cpX1.toFixed(1)},${cpY1.toFixed(1)} ${cpX2.toFixed(1)},${cpY2.toFixed(1)} ${p1.x.toFixed(1)},${p1.y.toFixed(1)}`;
+  }
+
+  const first = pts[0];
+  const last = pts[pts.length - 1];
+  const areaPath = `${linePath} L ${last.x},${height} L ${first.x},${height} Z`;
+
+  return { linePath, areaPath, points: pts };
+}
 
 export const AdminManagePage: React.FC = () => {
   const {
@@ -21,7 +74,22 @@ export const AdminManagePage: React.FC = () => {
 
   const [simulating, setSimulating] = useState(false);
   const [showJsonDump, setShowJsonDump] = useState(false);
-  const [timeSeries, setTimeSeries] = useState<Array<{ time: string; avgLatency: number; maxCpu: number; reqCount: number }>>([]);
+
+  // Initialize with initial history points so graphs start beautifully populated
+  const [timeSeries, setTimeSeries] = useState<MetricPoint[]>(() => {
+    const initial: MetricPoint[] = [];
+    const now = Date.now();
+    for (let i = 18; i >= 0; i--) {
+      const t = new Date(now - i * 2000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      initial.push({
+        time: t,
+        latency: Math.floor(Math.random() * 16) + 12,
+        cpu: Math.floor(Math.random() * 18) + 20,
+        rps: Math.floor(Math.random() * 30) + 45
+      });
+    }
+    return initial;
+  });
 
   const totalInstances = microservices.reduce((acc, s) => acc + s.instances.length, 0);
   const upInstances = microservices.reduce((acc, s) => acc + s.instances.filter(i => i.status === 'UP').length, 0);
@@ -30,25 +98,27 @@ export const AdminManagePage: React.FC = () => {
   const allInstances = microservices.flatMap(s => s.instances);
   const avgLatency = allInstances.length > 0 
     ? Math.round(allInstances.reduce((a, b) => a + b.latencyMs, 0) / allInstances.length)
-    : 0;
+    : 14;
   const maxCpu = allInstances.length > 0
     ? Math.max(...allInstances.map(i => i.cpuPercent))
-    : 0;
+    : 24;
 
-  // Track time-series data every 2 seconds for live graphs
+  // Track time-series data every 2 seconds for smooth live graphs
   useEffect(() => {
     const interval = setInterval(() => {
-      const now = new Date().toLocaleTimeString();
+      const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       const currentAvg = allInstances.length > 0 
         ? Math.round(allInstances.reduce((a, b) => a + b.latencyMs, 0) / allInstances.length)
-        : 12;
+        : Math.floor(Math.random() * 8) + 12;
       const currentMaxCpu = allInstances.length > 0
         ? Math.max(...allInstances.map(i => i.cpuPercent))
-        : 25;
+        : Math.floor(Math.random() * 15) + 22;
       
+      const newRps = Math.floor(Math.random() * 40) + 50;
+
       setTimeSeries(prev => [
-        ...prev.slice(-19),
-        { time: now, avgLatency: currentAvg, maxCpu: currentMaxCpu, reqCount: Math.floor(Math.random() * 80) + 40 }
+        ...prev.slice(-21),
+        { time: nowTime, latency: currentAvg, cpu: currentMaxCpu, rps: newRps }
       ]);
     }, 2000);
 
@@ -60,6 +130,19 @@ export const AdminManagePage: React.FC = () => {
     await simulateTrafficBurst();
     setSimulating(false);
   };
+
+  // Compute smooth curve SVG data for Latency & CPU
+  const latencyData = useMemo(() => timeSeries.map(p => p.latency), [timeSeries]);
+  const cpuData = useMemo(() => timeSeries.map(p => p.cpu), [timeSeries]);
+  const rpsData = useMemo(() => timeSeries.map(p => p.rps), [timeSeries]);
+
+  const latencyCurve = useMemo(() => createSmoothCurve(latencyData, 500, 110, 100), [latencyData]);
+  const cpuCurve = useMemo(() => createSmoothCurve(cpuData, 500, 110, 100), [cpuData]);
+  const rpsCurve = useMemo(() => createSmoothCurve(rpsData, 500, 110, 120), [rpsData]);
+
+  const latestLatency = latencyData[latencyData.length - 1] ?? avgLatency;
+  const latestCpu = cpuData[cpuData.length - 1] ?? maxCpu;
+  const latestRps = rpsData[rpsData.length - 1] ?? 60;
 
   return (
     <div className="min-h-screen bg-white text-black font-mono p-4 sm:p-8 space-y-8 antialiased selection:bg-black selection:text-white">
@@ -78,8 +161,8 @@ export const AdminManagePage: React.FC = () => {
             <span>Environment: <strong>PRODUCTION</strong></span>
             <span>Profile: <strong>cloud, postgres, eureka</strong></span>
             <span>Registry: <strong>{upInstances}/{totalInstances} NODES UP</strong></span>
-            <span>Avg Latency: <strong>{avgLatency}ms</strong></span>
-            <span>Peak CPU: <strong>{maxCpu}%</strong></span>
+            <span>Latency: <strong>{latestLatency}ms</strong></span>
+            <span>Peak CPU: <strong>{latestCpu}%</strong></span>
           </div>
         </div>
 
@@ -106,77 +189,279 @@ export const AdminManagePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Live Performance Graphs */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Latency Graph */}
-        <div className="border border-black p-4 space-y-3">
+      {/* Real Smooth Curved Graphs Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Graph 1: Smooth Latency Curve */}
+        <div className="border border-black p-4 space-y-3 bg-white">
           <div className="flex items-center justify-between border-b border-black pb-2 text-xs">
-            <span className="font-bold uppercase">Average Cluster Latency (ms)</span>
-            <span className="font-bold">{avgLatency} ms current</span>
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-black"></span>
+              <span className="font-bold uppercase">Cluster Latency</span>
+            </div>
+            <span className="font-bold text-sm">{latestLatency} ms</span>
           </div>
-          <div className="h-40 w-full flex items-end gap-1.5 pt-4 bg-neutral-50 p-2 border border-neutral-200">
-            {timeSeries.map((pt, idx) => {
-              const heightPct = Math.min(100, Math.max(10, (pt.avgLatency / 150) * 100));
-              return (
-                <div key={idx} className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative">
-                  <div
-                    style={{ height: `${heightPct}%` }}
-                    className="w-full bg-black group-hover:bg-neutral-600 transition-all"
+
+          <div className="relative h-32 w-full bg-neutral-50/60 border border-neutral-200 overflow-hidden">
+            {/* Background Grid Lines */}
+            <div className="absolute inset-0 flex flex-col justify-between p-2 pointer-events-none opacity-20">
+              <div className="border-b border-black w-full" />
+              <div className="border-b border-black w-full" />
+              <div className="border-b border-black w-full" />
+            </div>
+
+            {/* Y Axis Reference Labels */}
+            <div className="absolute right-2 inset-y-1 flex flex-col justify-between text-[9px] font-mono text-neutral-400 pointer-events-none">
+              <span>100ms</span>
+              <span>50ms</span>
+              <span>0ms</span>
+            </div>
+
+            {/* Smooth SVG Line & Area Chart */}
+            <svg
+              className="w-full h-full"
+              viewBox="0 0 500 110"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="latencyGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#000000" stopOpacity="0.25" />
+                  <stop offset="85%" stopColor="#000000" stopOpacity="0.02" />
+                  <stop offset="100%" stopColor="#000000" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              {/* Gradient Fill under curve */}
+              {latencyCurve.areaPath && (
+                <path
+                  d={latencyCurve.areaPath}
+                  fill="url(#latencyGrad)"
+                />
+              )}
+
+              {/* Main Smooth Stroke Path */}
+              {latencyCurve.linePath && (
+                <path
+                  d={latencyCurve.linePath}
+                  fill="none"
+                  stroke="#000000"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+
+              {/* Pulse Dot on Current Value */}
+              {latencyCurve.points.length > 0 && (
+                <g>
+                  <circle
+                    cx={latencyCurve.points[latencyCurve.points.length - 1].x}
+                    cy={latencyCurve.points[latencyCurve.points.length - 1].y}
+                    r="4"
+                    fill="#000000"
                   />
-                  <div className="hidden group-hover:block absolute -top-8 bg-black text-white text-[10px] px-1 py-0.5 whitespace-nowrap z-20">
-                    {pt.avgLatency}ms ({pt.time})
-                  </div>
-                </div>
-              );
-            })}
-            {timeSeries.length === 0 && (
-              <div className="w-full text-center text-xs text-neutral-400 py-12">
-                Awaiting telemetry ticks...
-              </div>
-            )}
+                  <circle
+                    cx={latencyCurve.points[latencyCurve.points.length - 1].x}
+                    cy={latencyCurve.points[latencyCurve.points.length - 1].y}
+                    r="8"
+                    fill="none"
+                    stroke="#000000"
+                    strokeWidth="1.5"
+                    className="animate-ping opacity-60"
+                  />
+                </g>
+              )}
+            </svg>
           </div>
-          <div className="flex justify-between text-[10px] text-neutral-500">
+
+          <div className="flex justify-between text-[10px] text-neutral-500 font-mono">
             <span>T - 40s</span>
             <span>T - 20s</span>
-            <span>Now</span>
+            <span className="font-bold text-black">Live</span>
           </div>
         </div>
 
-        {/* CPU Utilization Graph */}
-        <div className="border border-black p-4 space-y-3">
+        {/* Graph 2: Smooth CPU Utilization Curve */}
+        <div className="border border-black p-4 space-y-3 bg-white">
           <div className="flex items-center justify-between border-b border-black pb-2 text-xs">
-            <span className="font-bold uppercase">Peak Node CPU Utilization (%)</span>
-            <span className="font-bold">{maxCpu}% peak</span>
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-black"></span>
+              <span className="font-bold uppercase">Node CPU Load</span>
+            </div>
+            <span className="font-bold text-sm">{latestCpu}%</span>
           </div>
-          <div className="h-40 w-full flex items-end gap-1.5 pt-4 bg-neutral-50 p-2 border border-neutral-200">
-            {timeSeries.map((pt, idx) => {
-              const heightPct = Math.min(100, Math.max(5, pt.maxCpu));
-              return (
-                <div key={idx} className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative">
-                  <div
-                    style={{ height: `${heightPct}%` }}
-                    className={`w-full transition-all ${
-                      pt.maxCpu > 70 ? 'bg-neutral-900 border-t-2 border-red-600' : 'bg-black'
-                    }`}
+
+          <div className="relative h-32 w-full bg-neutral-50/60 border border-neutral-200 overflow-hidden">
+            {/* Background Grid Lines */}
+            <div className="absolute inset-0 flex flex-col justify-between p-2 pointer-events-none opacity-20">
+              <div className="border-b border-black w-full" />
+              <div className="border-b border-black w-full" />
+              <div className="border-b border-black w-full" />
+            </div>
+
+            {/* Y Axis Reference Labels */}
+            <div className="absolute right-2 inset-y-1 flex flex-col justify-between text-[9px] font-mono text-neutral-400 pointer-events-none">
+              <span>100%</span>
+              <span>50%</span>
+              <span>0%</span>
+            </div>
+
+            {/* Threshold Warning Line (75%) */}
+            <div className="absolute left-0 right-0 top-[25%] border-t border-dashed border-neutral-400 pointer-events-none opacity-40"></div>
+
+            {/* Smooth SVG Line & Area Chart */}
+            <svg
+              className="w-full h-full"
+              viewBox="0 0 500 110"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="cpuGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#000000" stopOpacity="0.22" />
+                  <stop offset="85%" stopColor="#000000" stopOpacity="0.02" />
+                  <stop offset="100%" stopColor="#000000" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              {/* Gradient Fill under curve */}
+              {cpuCurve.areaPath && (
+                <path
+                  d={cpuCurve.areaPath}
+                  fill="url(#cpuGrad)"
+                />
+              )}
+
+              {/* Main Smooth Stroke Path */}
+              {cpuCurve.linePath && (
+                <path
+                  d={cpuCurve.linePath}
+                  fill="none"
+                  stroke="#000000"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+
+              {/* Pulse Dot on Current Value */}
+              {cpuCurve.points.length > 0 && (
+                <g>
+                  <circle
+                    cx={cpuCurve.points[cpuCurve.points.length - 1].x}
+                    cy={cpuCurve.points[cpuCurve.points.length - 1].y}
+                    r="4"
+                    fill="#000000"
                   />
-                  <div className="hidden group-hover:block absolute -top-8 bg-black text-white text-[10px] px-1 py-0.5 whitespace-nowrap z-20">
-                    {pt.maxCpu}% CPU ({pt.time})
-                  </div>
-                </div>
-              );
-            })}
-            {timeSeries.length === 0 && (
-              <div className="w-full text-center text-xs text-neutral-400 py-12">
-                Awaiting telemetry ticks...
-              </div>
-            )}
+                  <circle
+                    cx={cpuCurve.points[cpuCurve.points.length - 1].x}
+                    cy={cpuCurve.points[cpuCurve.points.length - 1].y}
+                    r="8"
+                    fill="none"
+                    stroke="#000000"
+                    strokeWidth="1.5"
+                    className="animate-ping opacity-60"
+                  />
+                </g>
+              )}
+            </svg>
           </div>
-          <div className="flex justify-between text-[10px] text-neutral-500">
+
+          <div className="flex justify-between text-[10px] text-neutral-500 font-mono">
             <span>0%</span>
-            <span>50% Threshold</span>
-            <span>100% Limit</span>
+            <span>75% Warning Line</span>
+            <span className="font-bold text-black">Live</span>
           </div>
         </div>
+
+        {/* Graph 3: Smooth Gateway RPS Curve */}
+        <div className="border border-black p-4 space-y-3 bg-white">
+          <div className="flex items-center justify-between border-b border-black pb-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-black"></span>
+              <span className="font-bold uppercase">Gateway Throughput</span>
+            </div>
+            <span className="font-bold text-sm">{latestRps} RPS</span>
+          </div>
+
+          <div className="relative h-32 w-full bg-neutral-50/60 border border-neutral-200 overflow-hidden">
+            {/* Background Grid Lines */}
+            <div className="absolute inset-0 flex flex-col justify-between p-2 pointer-events-none opacity-20">
+              <div className="border-b border-black w-full" />
+              <div className="border-b border-black w-full" />
+              <div className="border-b border-black w-full" />
+            </div>
+
+            {/* Y Axis Reference Labels */}
+            <div className="absolute right-2 inset-y-1 flex flex-col justify-between text-[9px] font-mono text-neutral-400 pointer-events-none">
+              <span>120 rps</span>
+              <span>60 rps</span>
+              <span>0 rps</span>
+            </div>
+
+            {/* Smooth SVG Line & Area Chart */}
+            <svg
+              className="w-full h-full"
+              viewBox="0 0 500 110"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="rpsGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#000000" stopOpacity="0.22" />
+                  <stop offset="85%" stopColor="#000000" stopOpacity="0.02" />
+                  <stop offset="100%" stopColor="#000000" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              {/* Gradient Fill under curve */}
+              {rpsCurve.areaPath && (
+                <path
+                  d={rpsCurve.areaPath}
+                  fill="url(#rpsGrad)"
+                />
+              )}
+
+              {/* Main Smooth Stroke Path */}
+              {rpsCurve.linePath && (
+                <path
+                  d={rpsCurve.linePath}
+                  fill="none"
+                  stroke="#000000"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+
+              {/* Pulse Dot on Current Value */}
+              {rpsCurve.points.length > 0 && (
+                <g>
+                  <circle
+                    cx={rpsCurve.points[rpsCurve.points.length - 1].x}
+                    cy={rpsCurve.points[rpsCurve.points.length - 1].y}
+                    r="4"
+                    fill="#000000"
+                  />
+                  <circle
+                    cx={rpsCurve.points[rpsCurve.points.length - 1].x}
+                    cy={rpsCurve.points[rpsCurve.points.length - 1].y}
+                    r="8"
+                    fill="none"
+                    stroke="#000000"
+                    strokeWidth="1.5"
+                    className="animate-ping opacity-60"
+                  />
+                </g>
+              )}
+            </svg>
+          </div>
+
+          <div className="flex justify-between text-[10px] text-neutral-500 font-mono">
+            <span>T - 40s</span>
+            <span>T - 20s</span>
+            <span className="font-bold text-black">Live</span>
+          </div>
+        </div>
+
       </div>
 
       {/* Raw JSON metrics inspector */}
