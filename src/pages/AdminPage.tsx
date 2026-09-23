@@ -12,6 +12,8 @@ import { GatewayConsole } from '../components/GatewayConsole';
 import { SagaVisualizer } from '../components/SagaVisualizer';
 import { TestSuite } from '../components/TestSuite';
 import { LogStream } from '../components/LogStream';
+import { api } from '../services/api';
+import { ADMIN_EMAILS } from '../lib/supabase';
 import type { UserRole } from '../types';
 
 export const AdminPage: React.FC = () => {
@@ -32,8 +34,56 @@ export const AdminPage: React.FC = () => {
     runIntegrationTests
   } = useStore();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'rubrics' | 'jwt' | 'eureka' | 'gateway' | 'saga' | 'tests' | 'logs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'admins' | 'rubrics' | 'jwt' | 'eureka' | 'gateway' | 'saga' | 'tests' | 'logs'>('overview');
   const [copiedToken, setCopiedToken] = useState(false);
+
+  // Admin Team Management State
+  const [usersList, setUsersList] = useState<any[]>([]);
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [newAdminName, setNewAdminName] = useState('');
+  const [isAddingAdmin, setIsAddingAdmin] = useState(false);
+  const [adminSuccessMsg, setAdminSuccessMsg] = useState('');
+  const [adminErrorMsg, setAdminErrorMsg] = useState('');
+
+  React.useEffect(() => {
+    async function loadUsers() {
+      const res = await api.getUsers();
+      if (res.success && res.data) {
+        setUsersList(res.data);
+      }
+    }
+    loadUsers();
+  }, [activeTab]);
+
+  const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAdminEmail.trim()) return;
+    setIsAddingAdmin(true);
+    setAdminErrorMsg('');
+    setAdminSuccessMsg('');
+
+    try {
+      const res = await api.addAdminUser(newAdminEmail.trim(), newAdminName.trim());
+      setIsAddingAdmin(false);
+      if (res.success && res.data) {
+        setUsersList(prev => [res.data, ...prev.filter(u => u.email !== res.data.email)]);
+        setNewAdminEmail('');
+        setNewAdminName('');
+        setAdminSuccessMsg(`Successfully granted Administrator privileges to ${res.data.email}!`);
+        setTimeout(() => setAdminSuccessMsg(''), 4000);
+      } else {
+        setAdminErrorMsg(res.error || 'Failed to add administrator.');
+      }
+    } catch (err: any) {
+      setIsAddingAdmin(false);
+      setAdminErrorMsg(err?.message || 'Error granting admin privileges.');
+    }
+  };
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    await api.updateUserRole(userId, newRole);
+    setUsersList(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+  };
 
   const handleCopyToken = () => {
     navigator.clipboard.writeText(jwtToken);
@@ -204,6 +254,7 @@ export const AdminPage: React.FC = () => {
       <div className="flex items-center gap-1 overflow-x-auto pb-2 border-b border-neutral-200 scrollbar-none">
         {[
           { id: 'overview', label: 'Cluster Overview', icon: 'dashboard' },
+          { id: 'admins', label: 'Admin Team & Access', icon: 'admin_panel_settings' },
           { id: 'rubrics', label: 'Project Review 1 (60/60 Pts)', icon: 'verified' },
           { id: 'jwt', label: 'JWT & Security Tools', icon: 'key' },
           { id: 'eureka', label: 'Eureka Discovery', icon: 'hub' },
@@ -366,6 +417,193 @@ export const AdminPage: React.FC = () => {
                   </p>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Admin Team & Access Management */}
+      {activeTab === 'admins' && (
+        <div className="space-y-8">
+          {/* Top Banner Notice */}
+          <div className="p-6 rounded-3xl bg-neutral-900 text-white space-y-4 shadow-xl border border-neutral-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-white text-black font-mono text-[10px] font-bold uppercase">
+                    RBAC ACCESS CONTROL
+                  </span>
+                  <span className="text-xs font-mono text-white/60">Supabase SQL Persisted</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
+                  Administrator &amp; Staff Directory
+                </h3>
+                <p className="text-xs sm:text-sm text-white/70 max-w-2xl">
+                  Authorized administrators possess unrestricted privileges to manage tours, review live financial ledgers, inspect microservices, and grant role permissions.
+                </p>
+              </div>
+
+              {/* Environment Variable Admins Badge */}
+              <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15 shrink-0 max-w-sm">
+                <div className="text-[10px] font-mono text-white/60 uppercase mb-1">Configured in .env:</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {ADMIN_EMAILS.map((adminEmail) => (
+                    <span key={adminEmail} className="px-2.5 py-1 rounded-full bg-white text-black text-xs font-bold font-mono shadow-xs">
+                      {adminEmail}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Add New Admin Form */}
+          <div className="p-8 rounded-3xl bg-white border border-neutral-200 shadow-xs space-y-6">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
+              <div>
+                <h4 className="text-lg font-black text-black uppercase tracking-tight flex items-center gap-2">
+                  <Icon name="person_add" size={20} className="text-neutral-800" />
+                  Grant New Administrator Privileges
+                </h4>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Enter the email address of the team member to immediately grant full Administrator scope.
+                </p>
+              </div>
+            </div>
+
+            {adminSuccessMsg && (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-2 font-medium">
+                <Icon name="check_circle" size={18} className="text-emerald-600 shrink-0" />
+                <span>{adminSuccessMsg}</span>
+              </div>
+            )}
+
+            {adminErrorMsg && (
+              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center gap-2 font-medium">
+                <Icon name="error" size={18} className="text-rose-600 shrink-0" />
+                <span>{adminErrorMsg}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAddAdmin} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-neutral-600 font-mono uppercase">Admin Email *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. colleague@gmail.com"
+                  value={newAdminEmail}
+                  onChange={(e) => setNewAdminEmail(e.target.value)}
+                  className="w-full h-11 px-4 rounded-2xl border border-neutral-300 text-xs font-mono focus:outline-none focus:border-black bg-neutral-50 focus:bg-white"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-neutral-600 font-mono uppercase">Full Name (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Sarah Jenkins"
+                  value={newAdminName}
+                  onChange={(e) => setNewAdminName(e.target.value)}
+                  className="w-full h-11 px-4 rounded-2xl border border-neutral-300 text-xs font-sans focus:outline-none focus:border-black bg-neutral-50 focus:bg-white"
+                />
+              </div>
+
+              <div className="space-y-1.5 flex flex-col justify-end">
+                <Button
+                  type="submit"
+                  disabled={isAddingAdmin}
+                  className="h-11 rounded-2xl bg-black text-white hover:bg-neutral-800 font-bold text-xs gap-2 shadow-sm cursor-pointer"
+                >
+                  <Icon name="admin_panel_settings" size={16} />
+                  <span>{isAddingAdmin ? 'Saving to Supabase...' : 'Authorize as Admin'}</span>
+                </Button>
+              </div>
+            </form>
+          </div>
+
+          {/* Registered Users & Staff Table */}
+          <div className="p-8 rounded-3xl bg-white border border-neutral-200 shadow-xs space-y-6">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
+              <div>
+                <h4 className="text-lg font-black text-black uppercase tracking-tight flex items-center gap-2">
+                  <Icon name="group" size={20} className="text-neutral-800" />
+                  Active System Users &amp; Role Permissions ({usersList.length})
+                </h4>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Live user accounts stored in Supabase PostgreSQL `app_users` table.
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-neutral-200 text-neutral-500 font-mono uppercase text-[10px]">
+                    <th className="pb-3 font-semibold">User</th>
+                    <th className="pb-3 font-semibold">Email</th>
+                    <th className="pb-3 font-semibold">Current Role</th>
+                    <th className="pb-3 font-semibold">Authority Scope</th>
+                    <th className="pb-3 font-semibold text-right">Role Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100 font-sans">
+                  {usersList.map((user) => {
+                    const isSuperAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
+                    const isAdmin = user.role === 'ADMIN' || isSuperAdmin;
+
+                    return (
+                      <tr key={user.id || user.email} className="hover:bg-neutral-50/80 transition-colors">
+                        <td className="py-3.5 pr-4">
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-full bg-black text-white flex items-center justify-center font-bold text-xs font-mono">
+                              {user.avatar || user.name?.substring(0, 2).toUpperCase() || 'US'}
+                            </div>
+                            <span className="font-bold text-neutral-900">{user.name || user.email.split('@')[0]}</span>
+                          </div>
+                        </td>
+                        <td className="py-3.5 pr-4 font-mono text-neutral-700">
+                          {user.email}
+                          {isSuperAdmin && (
+                            <span className="ml-2 px-2 py-0.5 rounded-full bg-neutral-900 text-white text-[9px] font-mono font-bold">
+                              ENV ADMIN
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 pr-4">
+                          <Badge
+                            variant={isAdmin ? "default" : user.role === 'AGENT' ? "brand" : user.role === 'DEVOPS' ? "outline" : "secondary"}
+                            className="rounded-full text-[10px] font-mono font-bold"
+                          >
+                            {isAdmin ? 'ADMIN' : user.role}
+                          </Badge>
+                        </td>
+                        <td className="py-3.5 pr-4 text-neutral-500 text-[11px]">
+                          {isAdmin
+                            ? 'Full Cluster, Tours, & Ledger Access'
+                            : user.role === 'AGENT'
+                            ? 'Reservation Concierge & Customer PNRs'
+                            : user.role === 'DEVOPS'
+                            ? 'Service Scaling & Eureka Telemetry'
+                            : 'Standard Traveler Booking Access'}
+                        </td>
+                        <td className="py-3.5 text-right">
+                          <select
+                            value={isAdmin ? 'ADMIN' : user.role}
+                            onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                            className="h-8 px-2.5 rounded-xl border border-neutral-300 text-xs font-mono bg-white hover:border-black cursor-pointer"
+                          >
+                            <option value="ADMIN">ADMIN</option>
+                            <option value="AGENT">AGENT</option>
+                            <option value="DEVOPS">DEVOPS</option>
+                            <option value="TRAVELER">TRAVELER</option>
+                          </select>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

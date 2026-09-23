@@ -11,3 +11,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const SUPABASE_EDGE_API_URL = `${supabaseUrl}/functions/v1/voyagecraft-api`;
 export const JWT_SECRET = import.meta.env.VITE_JWT_SECRET || '';
+
+export const ADMIN_EMAILS: string[] = (import.meta.env.VITE_ADMIN_EMAILS || '')
+  .split(',')
+  .map((e: string) => e.trim().toLowerCase())
+  .filter(Boolean);
+
+export function isConfiguredAdmin(email: string): boolean {
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email.trim().toLowerCase());
+}

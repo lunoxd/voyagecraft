@@ -1,4 +1,4 @@
-import { supabase, SUPABASE_EDGE_API_URL } from '../lib/supabase';
+import { supabase, SUPABASE_EDGE_API_URL, isConfiguredAdmin } from '../lib/supabase';
 import type { TravelPackage, Booking, PaymentTransaction, TravelReview } from '../types';
 
 function mapDbToPackage(row: any): TravelPackage {
@@ -323,31 +323,37 @@ export const api = {
   // Auth & Users
   signIn: async (credentials: { email: string; password: string }) => {
     try {
+      const cleanEmail = credentials.email.trim().toLowerCase();
+      const isAdmin = isConfiguredAdmin(cleanEmail);
+
       const { data: user, error } = await supabase
         .from('app_users')
         .select('*')
-        .eq('email', credentials.email)
+        .eq('email', cleanEmail)
         .maybeSingle();
 
       if (!error && user) {
+        const effectiveRole = isAdmin ? 'ADMIN' : (user.role || 'TRAVELER');
         return {
           success: true,
           data: {
             id: user.id,
             name: user.name,
             email: user.email,
-            role: user.role,
+            role: effectiveRole,
             token: `jwt-token-${user.id}-${Date.now()}`
           }
         };
       }
+
+      const assignedRole = isAdmin ? 'ADMIN' : 'TRAVELER';
       return {
         success: true,
         data: {
           id: `USR-${Date.now()}`,
-          name: credentials.email.split('@')[0],
-          email: credentials.email,
-          role: 'ADMIN',
+          name: cleanEmail.split('@')[0],
+          email: cleanEmail,
+          role: assignedRole,
           token: `jwt-token-${Date.now()}`
         }
       };
@@ -358,14 +364,18 @@ export const api = {
 
   signUp: async (userData: { name: string; email: string; password: string; role: string }) => {
     try {
+      const cleanEmail = userData.email.trim().toLowerCase();
+      const isAdmin = isConfiguredAdmin(cleanEmail);
+      const assignedRole = isAdmin ? 'ADMIN' : (userData.role || 'TRAVELER');
+
       const newUser = {
         id: `USR-${Date.now()}`,
         name: userData.name,
-        email: userData.email,
-        role: userData.role || 'TRAVELER',
+        email: cleanEmail,
+        role: assignedRole,
         avatar: userData.name.substring(0, 2).toUpperCase()
       };
-      await supabase.from('app_users').insert([newUser]);
+      await supabase.from('app_users').upsert([newUser], { onConflict: 'email' });
       return {
         success: true,
         data: {
@@ -396,9 +406,51 @@ export const api = {
 
   getUsers: async () => {
     try {
-      const { data, error } = await supabase.from('app_users').select('*');
+      const { data, error } = await supabase
+        .from('app_users')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return { success: true, data: data || [] };
+    } catch (err: any) {
+      return { success: false, error: err?.message };
+    }
+  },
+
+  addAdminUser: async (email: string, name?: string) => {
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanName = name?.trim() || cleanEmail.split('@')[0];
+      const avatar = cleanName.substring(0, 2).toUpperCase();
+
+      const { data, error } = await supabase
+        .from('app_users')
+        .upsert({
+          id: `USR-ADMIN-${Date.now()}`,
+          name: cleanName,
+          email: cleanEmail,
+          role: 'ADMIN',
+          avatar
+        }, { onConflict: 'email' })
+        .select()
+        .single();
+
       if (error) throw error;
       return { success: true, data };
+    } catch (err: any) {
+      return { success: false, error: err?.message };
+    }
+  },
+
+  updateUserRole: async (userId: string, role: string) => {
+    try {
+      const { error } = await supabase
+        .from('app_users')
+        .update({ role })
+        .eq('id', userId);
+
+      if (error) throw error;
+      return { success: true };
     } catch (err: any) {
       return { success: false, error: err?.message };
     }
