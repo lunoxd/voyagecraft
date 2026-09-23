@@ -4,8 +4,60 @@ import { useStore } from '../context/StoreContext';
 import { Badge } from '../components/ui/badge';
 import { Icon } from '../components/ui/icon';
 import { BrandLogo } from '../components/ui/BrandLogo';
+import { Masonry, type MasonryItem } from '../components/ui/Masonry';
 import { FlowingMenu, type FlowingMenuItem } from '../components/ui/FlowingMenu';
 import { formatCurrency } from '../lib/utils';
+
+const MASONRY_ITEMS: MasonryItem[] = [
+  {
+    id: '1',
+    img: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?q=80&w=1200&auto=format&fit=crop',
+    url: '/packages/PKG-EUR-01',
+    height: 700,
+  },
+  {
+    id: '2',
+    img: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1200&auto=format&fit=crop',
+    url: '/packages/PKG-JPN-02',
+    height: 500,
+  },
+  {
+    id: '3',
+    img: 'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?q=80&w=1200&auto=format&fit=crop',
+    url: '/packages/PKG-NOR-03',
+    height: 800,
+  },
+  {
+    id: '4',
+    img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1200&auto=format&fit=crop',
+    url: '/packages/PKG-ALP-04',
+    height: 540,
+  },
+  {
+    id: '5',
+    img: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop',
+    url: '/packages',
+    height: 620,
+  },
+  {
+    id: '6',
+    img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1200&auto=format&fit=crop',
+    url: '/packages',
+    height: 480,
+  },
+  {
+    id: '7',
+    img: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1200&auto=format&fit=crop',
+    url: '/packages/PKG-JPN-02',
+    height: 750,
+  },
+  {
+    id: '8',
+    img: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=1200&auto=format&fit=crop',
+    url: '/packages/PKG-EUR-01',
+    height: 560,
+  },
+];
 
 export const HomePage: React.FC = () => {
   const { packages } = useStore();
@@ -42,8 +94,8 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="relative space-y-28 py-6 font-sans">
-      {/* Hero Section */}
-      <section className="relative z-10 pt-6 sm:pt-14 pb-8 space-y-10">
+      {/* Hero Section with React Bits Interactive Photo Masonry Grid */}
+      <section className="relative z-10 pt-6 sm:pt-14 pb-8 space-y-12">
         <div className="flex flex-col items-center justify-center text-center space-y-6 max-w-4xl mx-auto px-4">
           {/* Top Pill Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/80 backdrop-blur-xl border border-white/20 text-xs text-white shadow-2xl">
@@ -58,81 +110,19 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Hero Main Headline */}
-          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.05]">
+          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.05] drop-shadow-xl">
             Curated Journeys.
             <br />
             <span className="text-white/80 font-normal">Soft Motion Luxury.</span>
           </h1>
-        </div>
 
-        {/* 4 Destination Images directly below heading */}
-        <div className="w-full max-w-[1540px] mx-auto px-2 sm:px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 w-full">
-            {[
-              {
-                name: 'Swiss Alps',
-                region: 'Switzerland',
-                img: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?q=80&w=1200&auto=format&fit=crop',
-                url: '/packages/PKG-EUR-01',
-              },
-              {
-                name: 'Kyoto',
-                region: 'Japan',
-                img: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1200&auto=format&fit=crop',
-                url: '/packages/PKG-JPN-02',
-              },
-              {
-                name: 'Lofoten',
-                region: 'Norway',
-                img: 'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?q=80&w=1200&auto=format&fit=crop',
-                url: '/packages/PKG-NOR-03',
-              },
-              {
-                name: 'Dolomites',
-                region: 'Italy',
-                img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1200&auto=format&fit=crop',
-                url: '/packages/PKG-ALP-04',
-              },
-            ].map((dest) => (
-              <Link
-                key={dest.name}
-                to={dest.url}
-                className="group relative rounded-3xl overflow-hidden h-[260px] sm:h-[300px] border border-white/15 bg-neutral-900/60 shadow-2xl block hover:border-white/30 transition-all"
-              >
-                <img
-                  src={dest.img}
-                  alt={dest.name}
-                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5 transition-opacity duration-300">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-base sm:text-lg font-bold text-white tracking-tight leading-tight">
-                        {dest.name}
-                      </h4>
-                      <p className="text-xs font-mono text-white/70 mt-0.5">
-                        {dest.region}
-                      </p>
-                    </div>
-                    <span className="h-8 w-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Icon name="arrow_forward" size={14} />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Hero Description and CTA Buttons Below Images */}
-        <div className="flex flex-col items-center justify-center text-center space-y-6 max-w-4xl mx-auto px-4 pt-2">
           {/* Hero Subtitle Matter */}
-          <p className="text-base sm:text-xl text-white/90 font-normal max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-xl text-white/90 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-md">
             Handcrafted trans-continental circuits across the Swiss Alps, Kyoto, Lofoten, and Dolomites with real-time seat lock escrows and instantaneous booking.
           </p>
 
           {/* Action Triggers */}
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
             <Link to="/packages">
               <button className="bg-white text-black font-semibold text-sm sm:text-base px-8 py-3.5 rounded-2xl shadow-2xl hover:bg-neutral-100 hover:scale-105 transition-all cursor-pointer flex items-center gap-2">
                 <span>Explore Expeditions</span>
@@ -145,6 +135,21 @@ export const HomePage: React.FC = () => {
               </button>
             </Link>
           </div>
+        </div>
+
+        {/* Full React Bits Interactive Masonry Photo Grid with Hover Zoom & Blur */}
+        <div className="w-full max-w-[1540px] mx-auto px-2 sm:px-4 pt-4">
+          <Masonry
+            items={MASONRY_ITEMS}
+            ease="power3.out"
+            duration={0.6}
+            stagger={0.05}
+            animateFrom="bottom"
+            scaleOnHover={true}
+            hoverScale={0.95}
+            blurToFocus={true}
+            colorShiftOnHover={false}
+          />
         </div>
       </section>
 
