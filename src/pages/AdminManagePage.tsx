@@ -11,7 +11,12 @@ interface MetricPoint {
 }
 
 // Generates smooth Catmull-Rom / Bezier spline path for SVG
-function createSmoothCurve(data: number[], width: number = 500, height: number = 110, maxVal: number = 100): { linePath: string; areaPath: string; points: Array<{ x: number; y: number; val: number }> } {
+function createSmoothCurve(
+  data: number[],
+  width: number = 500,
+  height: number = 110,
+  maxVal: number = 100
+): { linePath: string; areaPath: string; points: Array<{ x: number; y: number; val: number }> } {
   if (!data || data.length === 0) return { linePath: '', areaPath: '', points: [] };
 
   const paddingY = 8;
@@ -56,6 +61,86 @@ function createSmoothCurve(data: number[], width: number = 500, height: number =
   return { linePath, areaPath, points: pts };
 }
 
+// Dynamic load-based color evaluator (Green = Normal/Low, Yellow = Moderate, Red = Critical/Overload)
+function getStatusTheme(value: number, type: 'latency' | 'cpu' | 'rps'): {
+  colorHex: string;
+  badgeText: string;
+  badgeBg: string;
+  badgeTextColor: string;
+} {
+  if (type === 'latency') {
+    if (value < 35) {
+      return {
+        colorHex: '#10B981', // Green
+        badgeText: 'NORMAL (GREEN)',
+        badgeBg: 'bg-emerald-100',
+        badgeTextColor: 'text-emerald-800'
+      };
+    } else if (value < 70) {
+      return {
+        colorHex: '#F59E0B', // Yellow
+        badgeText: 'ELEVATED (YELLOW)',
+        badgeBg: 'bg-amber-100',
+        badgeTextColor: 'text-amber-800'
+      };
+    } else {
+      return {
+        colorHex: '#EF4444', // Red
+        badgeText: 'CONGESTION (RED)',
+        badgeBg: 'bg-rose-100',
+        badgeTextColor: 'text-rose-800'
+      };
+    }
+  } else if (type === 'cpu') {
+    if (value < 45) {
+      return {
+        colorHex: '#10B981', // Green
+        badgeText: 'OPTIMAL (GREEN)',
+        badgeBg: 'bg-emerald-100',
+        badgeTextColor: 'text-emerald-800'
+      };
+    } else if (value < 75) {
+      return {
+        colorHex: '#F59E0B', // Yellow
+        badgeText: 'MODERATE LOAD (YELLOW)',
+        badgeBg: 'bg-amber-100',
+        badgeTextColor: 'text-amber-800'
+      };
+    } else {
+      return {
+        colorHex: '#EF4444', // Red
+        badgeText: 'OVERLOAD - SCALE UP (RED)',
+        badgeBg: 'bg-rose-100',
+        badgeTextColor: 'text-rose-800'
+      };
+    }
+  } else {
+    // RPS / Throughput
+    if (value < 65) {
+      return {
+        colorHex: '#10B981', // Green
+        badgeText: 'LOW TRAFFIC (GREEN)',
+        badgeBg: 'bg-emerald-100',
+        badgeTextColor: 'text-emerald-800'
+      };
+    } else if (value < 110) {
+      return {
+        colorHex: '#F59E0B', // Yellow
+        badgeText: 'MODERATE (YELLOW)',
+        badgeBg: 'bg-amber-100',
+        badgeTextColor: 'text-amber-800'
+      };
+    } else {
+      return {
+        colorHex: '#EF4444', // Red
+        badgeText: 'PEAK BURST (RED)',
+        badgeBg: 'bg-rose-100',
+        badgeTextColor: 'text-rose-800'
+      };
+    }
+  }
+}
+
 export const AdminManagePage: React.FC = () => {
   const {
     microservices,
@@ -75,7 +160,23 @@ export const AdminManagePage: React.FC = () => {
   const [simulating, setSimulating] = useState(false);
   const [showJsonDump, setShowJsonDump] = useState(false);
 
-  // Initialize with initial history points so graphs start beautifully populated
+  // Compute live active instances across cluster
+  const totalInstances = microservices.reduce((acc, s) => acc + s.instances.length, 0);
+  const upInstances = microservices.reduce((acc, s) => acc + s.instances.filter(i => i.status === 'UP').length, 0);
+
+  // Real-time calculation: more UP nodes = load distributes and drops CPU & latency
+  const allInstances = microservices.flatMap(s => s.instances);
+  const activeNodes = allInstances.filter(i => i.status === 'UP');
+
+  // Compute live averages dynamically directly from state
+  const avgLatency = activeNodes.length > 0 
+    ? Math.round(activeNodes.reduce((a, b) => a + b.latencyMs, 0) / activeNodes.length)
+    : 18;
+  const maxCpu = activeNodes.length > 0
+    ? Math.max(...activeNodes.map(i => i.cpuPercent))
+    : 30;
+
+  // Initialize with initial history points
   const [timeSeries, setTimeSeries] = useState<MetricPoint[]>(() => {
     const initial: MetricPoint[] = [];
     const now = Date.now();
@@ -83,47 +184,37 @@ export const AdminManagePage: React.FC = () => {
       const t = new Date(now - i * 2000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       initial.push({
         time: t,
-        latency: Math.floor(Math.random() * 16) + 12,
-        cpu: Math.floor(Math.random() * 18) + 20,
-        rps: Math.floor(Math.random() * 30) + 45
+        latency: 18,
+        cpu: 28,
+        rps: 45
       });
     }
     return initial;
   });
 
-  const totalInstances = microservices.reduce((acc, s) => acc + s.instances.length, 0);
-  const upInstances = microservices.reduce((acc, s) => acc + s.instances.filter(i => i.status === 'UP').length, 0);
-
-  // Compute live averages
-  const allInstances = microservices.flatMap(s => s.instances);
-  const avgLatency = allInstances.length > 0 
-    ? Math.round(allInstances.reduce((a, b) => a + b.latencyMs, 0) / allInstances.length)
-    : 14;
-  const maxCpu = allInstances.length > 0
-    ? Math.max(...allInstances.map(i => i.cpuPercent))
-    : 24;
-
-  // Track time-series data every 2 seconds for smooth live graphs
+  // Track time-series data every 2 seconds for smooth live graphs reflecting active nodes
   useEffect(() => {
     const interval = setInterval(() => {
       const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      const currentAvg = allInstances.length > 0 
-        ? Math.round(allInstances.reduce((a, b) => a + b.latencyMs, 0) / allInstances.length)
-        : Math.floor(Math.random() * 8) + 12;
-      const currentMaxCpu = allInstances.length > 0
-        ? Math.max(...allInstances.map(i => i.cpuPercent))
-        : Math.floor(Math.random() * 15) + 22;
+      const currentNodes = microservices.flatMap(s => s.instances).filter(i => i.status === 'UP');
       
-      const newRps = Math.floor(Math.random() * 40) + 50;
+      const currentAvgLatency = currentNodes.length > 0 
+        ? Math.round(currentNodes.reduce((a, b) => a + b.latencyMs, 0) / currentNodes.length)
+        : 18;
+      const currentPeakCpu = currentNodes.length > 0
+        ? Math.max(...currentNodes.map(i => i.cpuPercent))
+        : 28;
+      
+      const newRps = Math.floor(Math.random() * 20) + (currentNodes.length * 15);
 
       setTimeSeries(prev => [
         ...prev.slice(-21),
-        { time: nowTime, latency: currentAvg, cpu: currentMaxCpu, rps: newRps }
+        { time: nowTime, latency: currentAvgLatency, cpu: currentPeakCpu, rps: newRps }
       ]);
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [allInstances]);
+  }, [microservices]);
 
   const handleSimulateBurst = async () => {
     setSimulating(true);
@@ -131,18 +222,38 @@ export const AdminManagePage: React.FC = () => {
     setSimulating(false);
   };
 
-  // Compute smooth curve SVG data for Latency & CPU
+  const handleScaleAllUp = () => {
+    microservices.forEach(svc => {
+      addServiceInstance(svc.serviceId);
+    });
+  };
+
+  const handleScaleDown = () => {
+    microservices.forEach(svc => {
+      if (svc.instances.length > 1) {
+        const lastInst = svc.instances[svc.instances.length - 1];
+        removeServiceInstance(svc.serviceId, lastInst.instanceId);
+      }
+    });
+  };
+
+  // Compute smooth curve SVG data for Latency, CPU, RPS
   const latencyData = useMemo(() => timeSeries.map(p => p.latency), [timeSeries]);
   const cpuData = useMemo(() => timeSeries.map(p => p.cpu), [timeSeries]);
   const rpsData = useMemo(() => timeSeries.map(p => p.rps), [timeSeries]);
 
   const latencyCurve = useMemo(() => createSmoothCurve(latencyData, 500, 110, 100), [latencyData]);
   const cpuCurve = useMemo(() => createSmoothCurve(cpuData, 500, 110, 100), [cpuData]);
-  const rpsCurve = useMemo(() => createSmoothCurve(rpsData, 500, 110, 120), [rpsData]);
+  const rpsCurve = useMemo(() => createSmoothCurve(rpsData, 500, 110, 150), [rpsData]);
 
   const latestLatency = latencyData[latencyData.length - 1] ?? avgLatency;
   const latestCpu = cpuData[cpuData.length - 1] ?? maxCpu;
-  const latestRps = rpsData[rpsData.length - 1] ?? 60;
+  const latestRps = rpsData[rpsData.length - 1] ?? 50;
+
+  // Dynamic status themes based on current load values (Green, Yellow, Red)
+  const latencyTheme = getStatusTheme(latestLatency, 'latency');
+  const cpuTheme = getStatusTheme(latestCpu, 'cpu');
+  const rpsTheme = getStatusTheme(latestRps, 'rps');
 
   return (
     <div className="min-h-screen bg-white text-black font-mono p-4 sm:p-8 space-y-8 antialiased selection:bg-black selection:text-white">
@@ -159,14 +270,27 @@ export const AdminManagePage: React.FC = () => {
           </div>
           <div className="text-xs text-neutral-600 mt-1 flex flex-wrap gap-4">
             <span>Environment: <strong>PRODUCTION</strong></span>
-            <span>Profile: <strong>cloud, postgres, eureka</strong></span>
-            <span>Registry: <strong>{upInstances}/{totalInstances} NODES UP</strong></span>
-            <span>Latency: <strong>{latestLatency}ms</strong></span>
-            <span>Peak CPU: <strong>{latestCpu}%</strong></span>
+            <span>Active Registry: <strong>{upInstances}/{totalInstances} NODES UP</strong></span>
+            <span>Cluster Latency: <strong style={{ color: latencyTheme.colorHex }}>{latestLatency}ms</strong></span>
+            <span>Peak CPU: <strong style={{ color: cpuTheme.colorHex }}>{latestCpu}%</strong></span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleScaleAllUp}
+            className="bg-emerald-600 text-white px-3 py-1.5 text-xs font-bold hover:bg-emerald-700 transition-colors cursor-pointer shadow-xs flex items-center gap-1"
+            title="Add nodes to all microservices to reduce CPU load and latency"
+          >
+            <span>+ SCALE ALL UP</span>
+          </button>
+          <button
+            onClick={handleScaleDown}
+            className="border border-neutral-400 text-neutral-700 px-3 py-1.5 text-xs font-bold hover:bg-neutral-100 transition-colors cursor-pointer"
+            title="Remove 1 extra instance from each service to observe increased load"
+          >
+            <span>- SCALE DOWN</span>
+          </button>
           <button
             onClick={handleSimulateBurst}
             disabled={simulating}
@@ -189,18 +313,28 @@ export const AdminManagePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Real Smooth Curved Graphs Grid (Green, Yellow, Red) */}
+      {/* Real Smooth Curved Graphs Grid (Dynamic Green, Yellow, Red according to Load) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Graph 1: Smooth Latency Curve (GREEN) */}
-        <div className="border border-neutral-300 p-4 space-y-3 bg-white shadow-xs rounded-xl">
+        {/* Graph 1: Cluster Latency (Dynamically Green / Yellow / Red) */}
+        <div className="border border-neutral-300 p-4 space-y-3 bg-white shadow-xs rounded-xl transition-all">
           <div className="flex items-center justify-between border-b border-neutral-200 pb-2 text-xs">
             <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span
+                className="h-2.5 w-2.5 rounded-full animate-pulse"
+                style={{ backgroundColor: latencyTheme.colorHex }}
+              />
               <span className="font-bold uppercase text-neutral-900">Cluster Latency</span>
-              <span className="px-1.5 py-0.2 rounded-sm bg-emerald-100 text-emerald-800 text-[9px] font-bold">NORMAL</span>
+              <span className={`px-1.5 py-0.2 rounded-sm text-[9px] font-bold ${latencyTheme.badgeBg} ${latencyTheme.badgeTextColor}`}>
+                {latencyTheme.badgeText}
+              </span>
             </div>
-            <span className="font-bold text-sm text-emerald-600 font-mono">{latestLatency} ms</span>
+            <span
+              className="font-bold text-sm font-mono transition-colors"
+              style={{ color: latencyTheme.colorHex }}
+            >
+              {latestLatency} ms
+            </span>
           </div>
 
           <div className="relative h-32 w-full bg-neutral-50/70 border border-neutral-200 rounded-lg overflow-hidden">
@@ -218,17 +352,17 @@ export const AdminManagePage: React.FC = () => {
               <span>0ms</span>
             </div>
 
-            {/* Smooth SVG Line & Area Chart (Green) */}
+            {/* Smooth SVG Line & Area Chart */}
             <svg
               className="w-full h-full"
               viewBox="0 0 500 110"
               preserveAspectRatio="none"
             >
               <defs>
-                <linearGradient id="latencyGradGreen" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
-                  <stop offset="70%" stopColor="#10b981" stopOpacity="0.08" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                <linearGradient id="dynLatencyGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={latencyTheme.colorHex} stopOpacity="0.38" />
+                  <stop offset="70%" stopColor={latencyTheme.colorHex} stopOpacity="0.08" />
+                  <stop offset="100%" stopColor={latencyTheme.colorHex} stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
@@ -236,7 +370,7 @@ export const AdminManagePage: React.FC = () => {
               {latencyCurve.areaPath && (
                 <path
                   d={latencyCurve.areaPath}
-                  fill="url(#latencyGradGreen)"
+                  fill="url(#dynLatencyGrad)"
                 />
               )}
 
@@ -245,10 +379,11 @@ export const AdminManagePage: React.FC = () => {
                 <path
                   d={latencyCurve.linePath}
                   fill="none"
-                  stroke="#10b981"
+                  stroke={latencyTheme.colorHex}
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  className="transition-all duration-500"
                 />
               )}
 
@@ -259,14 +394,14 @@ export const AdminManagePage: React.FC = () => {
                     cx={latencyCurve.points[latencyCurve.points.length - 1].x}
                     cy={latencyCurve.points[latencyCurve.points.length - 1].y}
                     r="4"
-                    fill="#10b981"
+                    fill={latencyTheme.colorHex}
                   />
                   <circle
                     cx={latencyCurve.points[latencyCurve.points.length - 1].x}
                     cy={latencyCurve.points[latencyCurve.points.length - 1].y}
                     r="8"
                     fill="none"
-                    stroke="#10b981"
+                    stroke={latencyTheme.colorHex}
                     strokeWidth="1.5"
                     className="animate-ping opacity-60"
                   />
@@ -278,19 +413,29 @@ export const AdminManagePage: React.FC = () => {
           <div className="flex justify-between text-[10px] text-neutral-500 font-mono">
             <span>T - 40s</span>
             <span>T - 20s</span>
-            <span className="font-bold text-emerald-600">Live</span>
+            <span className="font-bold" style={{ color: latencyTheme.colorHex }}>Live</span>
           </div>
         </div>
 
-        {/* Graph 2: Smooth CPU Utilization Curve (YELLOW / AMBER) */}
-        <div className="border border-neutral-300 p-4 space-y-3 bg-white shadow-xs rounded-xl">
+        {/* Graph 2: Node CPU Load (Dynamically Green / Yellow / Red based on active instances) */}
+        <div className="border border-neutral-300 p-4 space-y-3 bg-white shadow-xs rounded-xl transition-all">
           <div className="flex items-center justify-between border-b border-neutral-200 pb-2 text-xs">
             <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <span
+                className="h-2.5 w-2.5 rounded-full animate-pulse"
+                style={{ backgroundColor: cpuTheme.colorHex }}
+              />
               <span className="font-bold uppercase text-neutral-900">Node CPU Load</span>
-              <span className="px-1.5 py-0.2 rounded-sm bg-amber-100 text-amber-800 text-[9px] font-bold">WARNING</span>
+              <span className={`px-1.5 py-0.2 rounded-sm text-[9px] font-bold ${cpuTheme.badgeBg} ${cpuTheme.badgeTextColor}`}>
+                {cpuTheme.badgeText}
+              </span>
             </div>
-            <span className="font-bold text-sm text-amber-600 font-mono">{latestCpu}%</span>
+            <span
+              className="font-bold text-sm font-mono transition-colors"
+              style={{ color: cpuTheme.colorHex }}
+            >
+              {latestCpu}%
+            </span>
           </div>
 
           <div className="relative h-32 w-full bg-neutral-50/70 border border-neutral-200 rounded-lg overflow-hidden">
@@ -311,17 +456,17 @@ export const AdminManagePage: React.FC = () => {
             {/* Threshold Warning Line (75%) */}
             <div className="absolute left-0 right-0 top-[25%] border-t border-dashed border-amber-400 pointer-events-none opacity-50"></div>
 
-            {/* Smooth SVG Line & Area Chart (Yellow/Amber) */}
+            {/* Smooth SVG Line & Area Chart */}
             <svg
               className="w-full h-full"
               viewBox="0 0 500 110"
               preserveAspectRatio="none"
             >
               <defs>
-                <linearGradient id="cpuGradYellow" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.35" />
-                  <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.08" />
-                  <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.0" />
+                <linearGradient id="dynCpuGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={cpuTheme.colorHex} stopOpacity="0.38" />
+                  <stop offset="70%" stopColor={cpuTheme.colorHex} stopOpacity="0.08" />
+                  <stop offset="100%" stopColor={cpuTheme.colorHex} stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
@@ -329,7 +474,7 @@ export const AdminManagePage: React.FC = () => {
               {cpuCurve.areaPath && (
                 <path
                   d={cpuCurve.areaPath}
-                  fill="url(#cpuGradYellow)"
+                  fill="url(#dynCpuGrad)"
                 />
               )}
 
@@ -338,10 +483,11 @@ export const AdminManagePage: React.FC = () => {
                 <path
                   d={cpuCurve.linePath}
                   fill="none"
-                  stroke="#f59e0b"
+                  stroke={cpuTheme.colorHex}
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  className="transition-all duration-500"
                 />
               )}
 
@@ -352,14 +498,14 @@ export const AdminManagePage: React.FC = () => {
                     cx={cpuCurve.points[cpuCurve.points.length - 1].x}
                     cy={cpuCurve.points[cpuCurve.points.length - 1].y}
                     r="4"
-                    fill="#f59e0b"
+                    fill={cpuTheme.colorHex}
                   />
                   <circle
                     cx={cpuCurve.points[cpuCurve.points.length - 1].x}
                     cy={cpuCurve.points[cpuCurve.points.length - 1].y}
                     r="8"
                     fill="none"
-                    stroke="#f59e0b"
+                    stroke={cpuTheme.colorHex}
                     strokeWidth="1.5"
                     className="animate-ping opacity-60"
                   />
@@ -370,20 +516,30 @@ export const AdminManagePage: React.FC = () => {
 
           <div className="flex justify-between text-[10px] text-neutral-500 font-mono">
             <span>0%</span>
-            <span>75% Threshold</span>
-            <span className="font-bold text-amber-600">Live</span>
+            <span>75% Warning Line</span>
+            <span className="font-bold" style={{ color: cpuTheme.colorHex }}>Live</span>
           </div>
         </div>
 
-        {/* Graph 3: Smooth Gateway RPS Curve (RED) */}
-        <div className="border border-neutral-300 p-4 space-y-3 bg-white shadow-xs rounded-xl">
+        {/* Graph 3: Gateway Throughput / RPS (Dynamically Green / Yellow / Red) */}
+        <div className="border border-neutral-300 p-4 space-y-3 bg-white shadow-xs rounded-xl transition-all">
           <div className="flex items-center justify-between border-b border-neutral-200 pb-2 text-xs">
             <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <span
+                className="h-2.5 w-2.5 rounded-full animate-pulse"
+                style={{ backgroundColor: rpsTheme.colorHex }}
+              />
               <span className="font-bold uppercase text-neutral-900">Throughput / Load</span>
-              <span className="px-1.5 py-0.2 rounded-sm bg-rose-100 text-rose-800 text-[9px] font-bold">PEAK</span>
+              <span className={`px-1.5 py-0.2 rounded-sm text-[9px] font-bold ${rpsTheme.badgeBg} ${rpsTheme.badgeTextColor}`}>
+                {rpsTheme.badgeText}
+              </span>
             </div>
-            <span className="font-bold text-sm text-rose-600 font-mono">{latestRps} RPS</span>
+            <span
+              className="font-bold text-sm font-mono transition-colors"
+              style={{ color: rpsTheme.colorHex }}
+            >
+              {latestRps} RPS
+            </span>
           </div>
 
           <div className="relative h-32 w-full bg-neutral-50/70 border border-neutral-200 rounded-lg overflow-hidden">
@@ -396,22 +552,22 @@ export const AdminManagePage: React.FC = () => {
 
             {/* Y Axis Reference Labels */}
             <div className="absolute right-2 inset-y-1 flex flex-col justify-between text-[9px] font-mono text-neutral-400 pointer-events-none">
-              <span>120 rps</span>
-              <span>60 rps</span>
+              <span>150 rps</span>
+              <span>75 rps</span>
               <span>0 rps</span>
             </div>
 
-            {/* Smooth SVG Line & Area Chart (Red) */}
+            {/* Smooth SVG Line & Area Chart */}
             <svg
               className="w-full h-full"
               viewBox="0 0 500 110"
               preserveAspectRatio="none"
             >
               <defs>
-                <linearGradient id="rpsGradRed" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.35" />
-                  <stop offset="70%" stopColor="#ef4444" stopOpacity="0.08" />
-                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0.0" />
+                <linearGradient id="dynRpsGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={rpsTheme.colorHex} stopOpacity="0.38" />
+                  <stop offset="70%" stopColor={rpsTheme.colorHex} stopOpacity="0.08" />
+                  <stop offset="100%" stopColor={rpsTheme.colorHex} stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
@@ -419,7 +575,7 @@ export const AdminManagePage: React.FC = () => {
               {rpsCurve.areaPath && (
                 <path
                   d={rpsCurve.areaPath}
-                  fill="url(#rpsGradRed)"
+                  fill="url(#dynRpsGrad)"
                 />
               )}
 
@@ -428,10 +584,11 @@ export const AdminManagePage: React.FC = () => {
                 <path
                   d={rpsCurve.linePath}
                   fill="none"
-                  stroke="#ef4444"
+                  stroke={rpsTheme.colorHex}
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  className="transition-all duration-500"
                 />
               )}
 
@@ -442,14 +599,14 @@ export const AdminManagePage: React.FC = () => {
                     cx={rpsCurve.points[rpsCurve.points.length - 1].x}
                     cy={rpsCurve.points[rpsCurve.points.length - 1].y}
                     r="4"
-                    fill="#ef4444"
+                    fill={rpsTheme.colorHex}
                   />
                   <circle
                     cx={rpsCurve.points[rpsCurve.points.length - 1].x}
                     cy={rpsCurve.points[rpsCurve.points.length - 1].y}
                     r="8"
                     fill="none"
-                    stroke="#ef4444"
+                    stroke={rpsTheme.colorHex}
                     strokeWidth="1.5"
                     className="animate-ping opacity-60"
                   />
@@ -461,7 +618,7 @@ export const AdminManagePage: React.FC = () => {
           <div className="flex justify-between text-[10px] text-neutral-500 font-mono">
             <span>T - 40s</span>
             <span>T - 20s</span>
-            <span className="font-bold text-rose-600">Live</span>
+            <span className="font-bold" style={{ color: rpsTheme.colorHex }}>Live</span>
           </div>
         </div>
 

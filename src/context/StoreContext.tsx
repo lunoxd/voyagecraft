@@ -289,25 +289,48 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [addLog]);
 
+  // Live realistic distributed load simulation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setMicroservices(prev =>
-        prev.map(svc => ({
-          ...svc,
-          instances: svc.instances.map(inst => {
-            if (inst.status !== 'UP') return inst;
-            const latencyDelta = (Math.random() - 0.5) * 4;
-            const cpuDelta = (Math.random() - 0.5) * 6;
-            return {
-              ...inst,
-              latencyMs: Math.max(2, Math.round(inst.latencyMs + latencyDelta)),
-              cpuPercent: Math.min(95, Math.max(8, Math.round(inst.cpuPercent + cpuDelta))),
-              uptimeSeconds: inst.uptimeSeconds + 5
-            };
-          })
-        }))
+        prev.map(svc => {
+          const upInstances = svc.instances.filter(i => i.status === 'UP');
+          const upCount = Math.max(1, upInstances.length);
+          
+          // Realistic load balancing: More nodes = lower CPU per node & faster latency
+          // Base load for service ~ 60-90% CPU on 1 node, ~30-40% on 2 nodes, ~12-20% on 3+ nodes
+          const baseCpu = 70 / upCount;
+          const baseLatency = 45 / upCount;
+
+          return {
+            ...svc,
+            instances: svc.instances.map(inst => {
+              if (inst.status !== 'UP') {
+                return {
+                  ...inst,
+                  cpuPercent: 0,
+                  latencyMs: 0
+                };
+              }
+              const jitterCpu = (Math.random() - 0.5) * 6;
+              const jitterLatency = (Math.random() - 0.5) * 4;
+
+              const calculatedCpu = Math.min(95, Math.max(5, Math.round(baseCpu + jitterCpu)));
+              // When CPU is congested (>70%), queueing latency increases
+              const congestionPenalty = calculatedCpu > 70 ? 35 : calculatedCpu > 50 ? 15 : 0;
+              const calculatedLatency = Math.min(250, Math.max(4, Math.round(baseLatency + congestionPenalty + jitterLatency)));
+
+              return {
+                ...inst,
+                latencyMs: calculatedLatency,
+                cpuPercent: calculatedCpu,
+                uptimeSeconds: inst.uptimeSeconds + 3
+              };
+            })
+          };
+        })
       );
-    }, 5000);
+    }, 2500);
 
     return () => clearInterval(interval);
   }, []);
