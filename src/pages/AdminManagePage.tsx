@@ -189,25 +189,26 @@ export const AdminManagePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Real Smooth Curved Graphs Grid */}
+      {/* Real Smooth Curved Graphs Grid (Green, Yellow, Red) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Graph 1: Smooth Latency Curve */}
-        <div className="border border-black p-4 space-y-3 bg-white">
-          <div className="flex items-center justify-between border-b border-black pb-2 text-xs">
+        {/* Graph 1: Smooth Latency Curve (GREEN) */}
+        <div className="border border-neutral-300 p-4 space-y-3 bg-white shadow-xs rounded-xl">
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2 text-xs">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-black"></span>
-              <span className="font-bold uppercase">Cluster Latency</span>
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="font-bold uppercase text-neutral-900">Cluster Latency</span>
+              <span className="px-1.5 py-0.2 rounded-sm bg-emerald-100 text-emerald-800 text-[9px] font-bold">NORMAL</span>
             </div>
-            <span className="font-bold text-sm">{latestLatency} ms</span>
+            <span className="font-bold text-sm text-emerald-600 font-mono">{latestLatency} ms</span>
           </div>
 
-          <div className="relative h-32 w-full bg-neutral-50/60 border border-neutral-200 overflow-hidden">
+          <div className="relative h-32 w-full bg-neutral-50/70 border border-neutral-200 rounded-lg overflow-hidden">
             {/* Background Grid Lines */}
             <div className="absolute inset-0 flex flex-col justify-between p-2 pointer-events-none opacity-20">
-              <div className="border-b border-black w-full" />
-              <div className="border-b border-black w-full" />
-              <div className="border-b border-black w-full" />
+              <div className="border-b border-neutral-400 w-full" />
+              <div className="border-b border-neutral-400 w-full" />
+              <div className="border-b border-neutral-400 w-full" />
             </div>
 
             {/* Y Axis Reference Labels */}
@@ -217,17 +218,17 @@ export const AdminManagePage: React.FC = () => {
               <span>0ms</span>
             </div>
 
-            {/* Smooth SVG Line & Area Chart */}
+            {/* Smooth SVG Line & Area Chart (Green) */}
             <svg
               className="w-full h-full"
               viewBox="0 0 500 110"
               preserveAspectRatio="none"
             >
               <defs>
-                <linearGradient id="latencyGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#000000" stopOpacity="0.25" />
-                  <stop offset="85%" stopColor="#000000" stopOpacity="0.02" />
-                  <stop offset="100%" stopColor="#000000" stopOpacity="0.0" />
+                <linearGradient id="latencyGradGreen" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
+                  <stop offset="70%" stopColor="#10b981" stopOpacity="0.08" />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
@@ -235,7 +236,7 @@ export const AdminManagePage: React.FC = () => {
               {latencyCurve.areaPath && (
                 <path
                   d={latencyCurve.areaPath}
-                  fill="url(#latencyGrad)"
+                  fill="url(#latencyGradGreen)"
                 />
               )}
 
@@ -244,7 +245,7 @@ export const AdminManagePage: React.FC = () => {
                 <path
                   d={latencyCurve.linePath}
                   fill="none"
-                  stroke="#000000"
+                  stroke="#10b981"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -258,14 +259,14 @@ export const AdminManagePage: React.FC = () => {
                     cx={latencyCurve.points[latencyCurve.points.length - 1].x}
                     cy={latencyCurve.points[latencyCurve.points.length - 1].y}
                     r="4"
-                    fill="#000000"
+                    fill="#10b981"
                   />
                   <circle
                     cx={latencyCurve.points[latencyCurve.points.length - 1].x}
                     cy={latencyCurve.points[latencyCurve.points.length - 1].y}
                     r="8"
                     fill="none"
-                    stroke="#000000"
+                    stroke="#10b981"
                     strokeWidth="1.5"
                     className="animate-ping opacity-60"
                   />
@@ -277,26 +278,27 @@ export const AdminManagePage: React.FC = () => {
           <div className="flex justify-between text-[10px] text-neutral-500 font-mono">
             <span>T - 40s</span>
             <span>T - 20s</span>
-            <span className="font-bold text-black">Live</span>
+            <span className="font-bold text-emerald-600">Live</span>
           </div>
         </div>
 
-        {/* Graph 2: Smooth CPU Utilization Curve */}
-        <div className="border border-black p-4 space-y-3 bg-white">
-          <div className="flex items-center justify-between border-b border-black pb-2 text-xs">
+        {/* Graph 2: Smooth CPU Utilization Curve (YELLOW / AMBER) */}
+        <div className="border border-neutral-300 p-4 space-y-3 bg-white shadow-xs rounded-xl">
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2 text-xs">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-black"></span>
-              <span className="font-bold uppercase">Node CPU Load</span>
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <span className="font-bold uppercase text-neutral-900">Node CPU Load</span>
+              <span className="px-1.5 py-0.2 rounded-sm bg-amber-100 text-amber-800 text-[9px] font-bold">WARNING</span>
             </div>
-            <span className="font-bold text-sm">{latestCpu}%</span>
+            <span className="font-bold text-sm text-amber-600 font-mono">{latestCpu}%</span>
           </div>
 
-          <div className="relative h-32 w-full bg-neutral-50/60 border border-neutral-200 overflow-hidden">
+          <div className="relative h-32 w-full bg-neutral-50/70 border border-neutral-200 rounded-lg overflow-hidden">
             {/* Background Grid Lines */}
             <div className="absolute inset-0 flex flex-col justify-between p-2 pointer-events-none opacity-20">
-              <div className="border-b border-black w-full" />
-              <div className="border-b border-black w-full" />
-              <div className="border-b border-black w-full" />
+              <div className="border-b border-neutral-400 w-full" />
+              <div className="border-b border-neutral-400 w-full" />
+              <div className="border-b border-neutral-400 w-full" />
             </div>
 
             {/* Y Axis Reference Labels */}
@@ -307,19 +309,19 @@ export const AdminManagePage: React.FC = () => {
             </div>
 
             {/* Threshold Warning Line (75%) */}
-            <div className="absolute left-0 right-0 top-[25%] border-t border-dashed border-neutral-400 pointer-events-none opacity-40"></div>
+            <div className="absolute left-0 right-0 top-[25%] border-t border-dashed border-amber-400 pointer-events-none opacity-50"></div>
 
-            {/* Smooth SVG Line & Area Chart */}
+            {/* Smooth SVG Line & Area Chart (Yellow/Amber) */}
             <svg
               className="w-full h-full"
               viewBox="0 0 500 110"
               preserveAspectRatio="none"
             >
               <defs>
-                <linearGradient id="cpuGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#000000" stopOpacity="0.22" />
-                  <stop offset="85%" stopColor="#000000" stopOpacity="0.02" />
-                  <stop offset="100%" stopColor="#000000" stopOpacity="0.0" />
+                <linearGradient id="cpuGradYellow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.35" />
+                  <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.08" />
+                  <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
@@ -327,7 +329,7 @@ export const AdminManagePage: React.FC = () => {
               {cpuCurve.areaPath && (
                 <path
                   d={cpuCurve.areaPath}
-                  fill="url(#cpuGrad)"
+                  fill="url(#cpuGradYellow)"
                 />
               )}
 
@@ -336,7 +338,7 @@ export const AdminManagePage: React.FC = () => {
                 <path
                   d={cpuCurve.linePath}
                   fill="none"
-                  stroke="#000000"
+                  stroke="#f59e0b"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -350,14 +352,14 @@ export const AdminManagePage: React.FC = () => {
                     cx={cpuCurve.points[cpuCurve.points.length - 1].x}
                     cy={cpuCurve.points[cpuCurve.points.length - 1].y}
                     r="4"
-                    fill="#000000"
+                    fill="#f59e0b"
                   />
                   <circle
                     cx={cpuCurve.points[cpuCurve.points.length - 1].x}
                     cy={cpuCurve.points[cpuCurve.points.length - 1].y}
                     r="8"
                     fill="none"
-                    stroke="#000000"
+                    stroke="#f59e0b"
                     strokeWidth="1.5"
                     className="animate-ping opacity-60"
                   />
@@ -368,27 +370,28 @@ export const AdminManagePage: React.FC = () => {
 
           <div className="flex justify-between text-[10px] text-neutral-500 font-mono">
             <span>0%</span>
-            <span>75% Warning Line</span>
-            <span className="font-bold text-black">Live</span>
+            <span>75% Threshold</span>
+            <span className="font-bold text-amber-600">Live</span>
           </div>
         </div>
 
-        {/* Graph 3: Smooth Gateway RPS Curve */}
-        <div className="border border-black p-4 space-y-3 bg-white">
-          <div className="flex items-center justify-between border-b border-black pb-2 text-xs">
+        {/* Graph 3: Smooth Gateway RPS Curve (RED) */}
+        <div className="border border-neutral-300 p-4 space-y-3 bg-white shadow-xs rounded-xl">
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2 text-xs">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-black"></span>
-              <span className="font-bold uppercase">Gateway Throughput</span>
+              <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <span className="font-bold uppercase text-neutral-900">Throughput / Load</span>
+              <span className="px-1.5 py-0.2 rounded-sm bg-rose-100 text-rose-800 text-[9px] font-bold">PEAK</span>
             </div>
-            <span className="font-bold text-sm">{latestRps} RPS</span>
+            <span className="font-bold text-sm text-rose-600 font-mono">{latestRps} RPS</span>
           </div>
 
-          <div className="relative h-32 w-full bg-neutral-50/60 border border-neutral-200 overflow-hidden">
+          <div className="relative h-32 w-full bg-neutral-50/70 border border-neutral-200 rounded-lg overflow-hidden">
             {/* Background Grid Lines */}
             <div className="absolute inset-0 flex flex-col justify-between p-2 pointer-events-none opacity-20">
-              <div className="border-b border-black w-full" />
-              <div className="border-b border-black w-full" />
-              <div className="border-b border-black w-full" />
+              <div className="border-b border-neutral-400 w-full" />
+              <div className="border-b border-neutral-400 w-full" />
+              <div className="border-b border-neutral-400 w-full" />
             </div>
 
             {/* Y Axis Reference Labels */}
@@ -398,17 +401,17 @@ export const AdminManagePage: React.FC = () => {
               <span>0 rps</span>
             </div>
 
-            {/* Smooth SVG Line & Area Chart */}
+            {/* Smooth SVG Line & Area Chart (Red) */}
             <svg
               className="w-full h-full"
               viewBox="0 0 500 110"
               preserveAspectRatio="none"
             >
               <defs>
-                <linearGradient id="rpsGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#000000" stopOpacity="0.22" />
-                  <stop offset="85%" stopColor="#000000" stopOpacity="0.02" />
-                  <stop offset="100%" stopColor="#000000" stopOpacity="0.0" />
+                <linearGradient id="rpsGradRed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.35" />
+                  <stop offset="70%" stopColor="#ef4444" stopOpacity="0.08" />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
@@ -416,7 +419,7 @@ export const AdminManagePage: React.FC = () => {
               {rpsCurve.areaPath && (
                 <path
                   d={rpsCurve.areaPath}
-                  fill="url(#rpsGrad)"
+                  fill="url(#rpsGradRed)"
                 />
               )}
 
@@ -425,7 +428,7 @@ export const AdminManagePage: React.FC = () => {
                 <path
                   d={rpsCurve.linePath}
                   fill="none"
-                  stroke="#000000"
+                  stroke="#ef4444"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -439,14 +442,14 @@ export const AdminManagePage: React.FC = () => {
                     cx={rpsCurve.points[rpsCurve.points.length - 1].x}
                     cy={rpsCurve.points[rpsCurve.points.length - 1].y}
                     r="4"
-                    fill="#000000"
+                    fill="#ef4444"
                   />
                   <circle
                     cx={rpsCurve.points[rpsCurve.points.length - 1].x}
                     cy={rpsCurve.points[rpsCurve.points.length - 1].y}
                     r="8"
                     fill="none"
-                    stroke="#000000"
+                    stroke="#ef4444"
                     strokeWidth="1.5"
                     className="animate-ping opacity-60"
                   />
@@ -458,7 +461,7 @@ export const AdminManagePage: React.FC = () => {
           <div className="flex justify-between text-[10px] text-neutral-500 font-mono">
             <span>T - 40s</span>
             <span>T - 20s</span>
-            <span className="font-bold text-black">Live</span>
+            <span className="font-bold text-rose-600">Live</span>
           </div>
         </div>
 
