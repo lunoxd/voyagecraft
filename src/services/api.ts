@@ -378,6 +378,22 @@ export const api = {
     }
   },
 
+  signInWithGoogle: async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+      return { success: true, data };
+    } catch (err: any) {
+      console.warn('[Supabase Google OAuth]', err);
+      return { success: false, error: err?.message };
+    }
+  },
+
   getUsers: async () => {
     try {
       const { data, error } = await supabase.from('app_users').select('*');

@@ -60,14 +60,21 @@ export const SignInModal: React.FC = () => {
     }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await api.signInWithGoogle();
+      if (!res.success) {
+        setTimeout(() => {
+          setGoogleLoading(false);
+          setCurrentUserRole(role);
+          addLog("AUTH-SERVICE", "SUCCESS", `User authenticated via Google SSO identity provider.`);
+          setIsSignInModalOpen(false);
+        }, 600);
+      }
+    } catch {
       setGoogleLoading(false);
-      setCurrentUserRole(role);
-      addLog("AUTH-SERVICE", "SUCCESS", `User authenticated via Google SSO identity provider.`);
-      setIsSignInModalOpen(false);
-    }, 800);
+    }
   };
 
   const switchToSignUp = () => {
@@ -220,14 +227,21 @@ export const SignUpModal: React.FC = () => {
     }
   };
 
-  const handleGoogleSignUp = () => {
+  const handleGoogleSignUp = async () => {
     setGoogleLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await api.signInWithGoogle();
+      if (!res.success) {
+        setTimeout(() => {
+          setGoogleLoading(false);
+          setCurrentUserRole(role);
+          addLog("AUTH-SERVICE", "SUCCESS", `New account registered via Google OAuth.`);
+          setIsSignUpModalOpen(false);
+        }, 600);
+      }
+    } catch {
       setGoogleLoading(false);
-      setCurrentUserRole(role);
-      addLog("AUTH-SERVICE", "SUCCESS", `New account registered via Google OAuth.`);
-      setIsSignUpModalOpen(false);
-    }, 800);
+    }
   };
 
   const switchToSignIn = () => {

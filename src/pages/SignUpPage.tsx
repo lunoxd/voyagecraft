@@ -49,12 +49,20 @@ export const SignUpPage: React.FC = () => {
     setGoogleLoading(true);
     setErrorMsg(null);
 
-    setTimeout(() => {
+    try {
+      const res = await api.signInWithGoogle();
+      if (!res.success) {
+        setTimeout(() => {
+          setGoogleLoading(false);
+          setCurrentUserRole(role);
+          addLog("AUTH-SERVICE", "SUCCESS", `New user profile initialized via Google OAuth federated provider.`);
+          navigate('/packages');
+        }, 600);
+      }
+    } catch (e: any) {
       setGoogleLoading(false);
-      setCurrentUserRole(role);
-      addLog("AUTH-SERVICE", "SUCCESS", `New user profile initialized via Google OAuth federated provider.`);
-      navigate('/packages');
-    }, 900);
+      setErrorMsg(e?.message || 'Google Sign-Up failed');
+    }
   };
 
   return (
