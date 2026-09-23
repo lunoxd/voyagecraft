@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { Badge } from '../components/ui/badge';
 import { Icon } from '../components/ui/icon';
-import { BrandLogo } from '../components/ui/BrandLogo';
 import { Masonry, type MasonryItem } from '../components/ui/Masonry';
 import { FlowingMenu, type FlowingMenuItem } from '../components/ui/FlowingMenu';
 import { formatCurrency } from '../lib/utils';
@@ -97,28 +96,16 @@ export const HomePage: React.FC = () => {
       {/* Hero Section with React Bits Interactive Photo Masonry Grid */}
       <section className="relative z-10 pt-6 sm:pt-14 pb-8 space-y-12">
         <div className="flex flex-col items-center justify-center text-center space-y-6 max-w-4xl mx-auto px-4">
-          {/* Top Pill Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/80 backdrop-blur-xl border border-white/20 text-xs text-white shadow-2xl">
-            <div className="h-5 w-5 rounded-full bg-white text-black flex items-center justify-center p-0.5 shadow-sm">
-              <BrandLogo size={13} className="text-black" />
-            </div>
-            <span className="font-bold tracking-wider uppercase text-[11px]">
-              VOYAGECRAFT
-            </span>
-            <span className="text-white/40">•</span>
-            <span className="font-medium text-white/90 tracking-tight">Curated Luxury Expeditions</span>
-          </div>
-
           {/* Hero Main Headline */}
           <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.05] drop-shadow-xl">
-            Curated Journeys.
+            Curated Luxury Expeditions.
             <br />
-            <span className="text-white/80 font-normal">Soft Motion Luxury.</span>
+            <span className="text-white/80 font-normal">Timeless Voyages Beyond.</span>
           </h1>
 
           {/* Hero Subtitle Matter */}
           <p className="text-base sm:text-xl text-white/90 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-md">
-            Handcrafted trans-continental circuits across the Swiss Alps, Kyoto, Lofoten, and Dolomites with real-time seat lock escrows and instantaneous booking.
+            Handcrafted private circuits across the Swiss Alps, Kyoto sanctuaries, Lofoten fjords, and Alpine Dolomites—engineered with real-time seat lock escrows and instantaneous booking.
           </p>
 
           {/* Action Triggers */}
@@ -137,8 +124,8 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Full React Bits Interactive Masonry Photo Grid with Hover Zoom & Blur */}
-        <div className="w-full max-w-[1540px] mx-auto px-2 sm:px-4 pt-4">
+        {/* Full React Bits Interactive Masonry Photo Grid with Hover Zoom & Blur - Spaced down for initial viewpoint */}
+        <div className="w-full max-w-[1540px] mx-auto px-2 sm:px-4 pt-16 sm:pt-24 mt-8">
           <Masonry
             items={MASONRY_ITEMS}
             ease="power3.out"
@@ -288,75 +275,8 @@ export const HomePage: React.FC = () => {
           })}
         </div>
       </section>
-
-      {/* Visual Expeditions Gallery Grid */}
-      <section className="relative z-10 space-y-6">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <div className="text-xs font-mono text-white/60 uppercase tracking-wider">Visual Journals</div>
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white uppercase">
-            Analog Film Captures
-          </h2>
-          <p className="text-xs sm:text-sm text-white/70">
-            Natural lighting and organic 35mm grain captured across European, Asian, and Nordic expeditions.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="group rounded-3xl overflow-hidden bg-neutral-900/60 backdrop-blur-xl border border-white/15 shadow-2xl hover:border-white/30 flex flex-col transition-all">
-            <div className="aspect-4/3 overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=800&auto=format&fit=crop"
-                alt="Kyoto Zen Garden Pavilion"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <div className="p-5 space-y-1 bg-neutral-950/40">
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-rose-400 font-bold uppercase">Kyoto, Japan</span>
-                <span className="text-white/40">Fujichrome</span>
-              </div>
-              <h4 className="font-bold text-sm text-white">Arashiyama Sanctuary &amp; Maple Garden</h4>
-              <p className="text-xs text-white/60">Autumn tea ceremony pavilion with stone pathway.</p>
-            </div>
-          </div>
-
-          <div className="group rounded-3xl overflow-hidden bg-neutral-900/60 backdrop-blur-xl border border-white/15 shadow-2xl hover:border-white/30 flex flex-col transition-all">
-            <div className="aspect-4/3 overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?q=80&w=800&auto=format&fit=crop"
-                alt="Lofoten Aurora Rorbu"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <div className="p-5 space-y-1 bg-neutral-950/40">
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-emerald-400 font-bold uppercase">Lofoten, Norway</span>
-                <span className="text-white/40">ISO 800 Film</span>
-              </div>
-              <h4 className="font-bold text-sm text-white">Arctic Aurora &amp; Fjord Rorbu</h4>
-              <p className="text-xs text-white/60">Traditional stilt cabin reflecting emerald northern lights.</p>
-            </div>
-          </div>
-
-          <div className="group rounded-3xl overflow-hidden bg-neutral-900/60 backdrop-blur-xl border border-white/15 shadow-2xl hover:border-white/30 flex flex-col sm:col-span-2 lg:col-span-1 transition-all">
-            <div className="aspect-4/3 overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800&auto=format&fit=crop"
-                alt="Dolomites Mountain Chalet"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <div className="p-5 space-y-1 bg-neutral-950/40">
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-amber-400 font-bold uppercase">Dolomites, Italy</span>
-                <span className="text-white/40">Kodak Portra</span>
-              </div>
-              <h4 className="font-bold text-sm text-white">Alpine Sunrise Chalet Terrace</h4>
-              <p className="text-xs text-white/60">Morning light kissing snow peaks and wooden balcony.</p>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 };
+
+

@@ -28,7 +28,7 @@ import {
 } from '../data/initialData';
 import { generateId } from '../lib/utils';
 import { api } from '../services/api';
-import { JWT_SECRET } from '../lib/supabase';
+import { supabase, isConfiguredAdmin, JWT_SECRET } from '../lib/supabase';
 import confetti from 'canvas-confetti';
 
 interface StoreContextType {
@@ -240,6 +240,54 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setJwtState(newJwt);
     addLog("AUTH-SERVICE", "INFO", `User role switched to ${role}. New Bearer JWT generated.`);
   };
+
+  // Listen for Supabase OAuth authentication events (e.g. Google SSO on localhost or Vercel)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const email = session.user.email || '';
+        const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || email.split('@')[0];
+        const isAdmin = isConfiguredAdmin(email);
+        const role: UserRole = isAdmin ? 'ADMIN' : 'TRAVELER';
+        const userObj: User = {
+          id: session.user.id || generateId('USR'),
+          name,
+          email,
+          role,
+          avatar: name.substring(0, 2).toUpperCase()
+        };
+        setCurrentUser(userObj);
+        localStorage.setItem('vc_user', JSON.stringify(userObj));
+        const tokenObj = generateTokenForUser(userObj);
+        setJwtState(tokenObj);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const email = session.user.email || '';
+        const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || email.split('@')[0];
+        const isAdmin = isConfiguredAdmin(email);
+        const role: UserRole = isAdmin ? 'ADMIN' : 'TRAVELER';
+        const userObj: User = {
+          id: session.user.id || generateId('USR'),
+          name,
+          email,
+          role,
+          avatar: name.substring(0, 2).toUpperCase()
+        };
+        setCurrentUser(userObj);
+        localStorage.setItem('vc_user', JSON.stringify(userObj));
+        const tokenObj = generateTokenForUser(userObj);
+        setJwtState(tokenObj);
+        addLog("AUTH-SERVICE", "SUCCESS", `OAuth authenticated session active for ${email} (${role}).`);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [addLog]);
 
   useEffect(() => {
     const interval = setInterval(() => {

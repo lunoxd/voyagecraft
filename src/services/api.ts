@@ -390,10 +390,14 @@ export const api = {
 
   signInWithGoogle: async () => {
     try {
+      const redirectOrigin = typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin
+        : 'https://voyagecraft-olive.vercel.app';
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: redirectOrigin
         }
       });
       if (error) throw error;
