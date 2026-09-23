@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { StoreProvider } from './context/StoreContext';
 import { Navbar } from './components/Navbar';
 import { HomePage } from './pages/HomePage';
@@ -11,6 +11,7 @@ import { PackageDetailPage } from './pages/PackageDetailPage';
 import { BookingsPage } from './pages/BookingsPage';
 import { PaymentsPage } from './pages/PaymentsPage';
 import { AdminPage } from './pages/AdminPage';
+import { AdminManagePage } from './pages/AdminManagePage';
 import { EurekaPage } from './pages/EurekaPage';
 import { GatewayPage } from './pages/GatewayPage';
 import { SagaPage } from './pages/SagaPage';
@@ -26,9 +27,22 @@ import { Grainient } from './components/ui/Grainient';
 import FooterSection from './components/FooterSection';
 
 const AppLayout: React.FC = () => {
+  const location = useLocation();
+  const isManageRoute = location.pathname === '/admin/manage';
+
+  if (isManageRoute) {
+    return (
+      <div className="min-h-screen bg-white text-black font-mono">
+        <Routes>
+          <Route path="/admin/manage" element={<AdminManagePage />} />
+        </Routes>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen text-white flex flex-col font-sans selection:bg-white selection:text-black relative">
-      {/* Full-Screen Grainient WebGL Background exactly matching screenshot */}
+      {/* Full-Screen Grainient WebGL Background */}
       <div className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden">
         <Grainient
           color1="#223d41"
@@ -70,6 +84,7 @@ const AppLayout: React.FC = () => {
           <Route path="/bookings" element={<BookingsPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/manage" element={<AdminManagePage />} />
           <Route path="/eureka" element={<EurekaPage />} />
           <Route path="/gateway" element={<GatewayPage />} />
           <Route path="/saga" element={<SagaPage />} />

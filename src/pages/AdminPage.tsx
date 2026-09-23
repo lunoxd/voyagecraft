@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -149,6 +150,17 @@ export const AdminPage: React.FC = () => {
 
         {/* Quick Cluster Actions */}
         <div className="flex flex-wrap items-center gap-2">
+          <Link to="/admin/manage">
+            <Button
+              variant="default"
+              size="sm"
+              className="rounded-full text-xs font-bold h-10 px-4 bg-black hover:bg-neutral-800 text-white gap-1.5 shadow-sm"
+            >
+              <Icon name="terminal" size={16} />
+              <span>Dev Console (/admin/manage)</span>
+            </Button>
+          </Link>
+
           <Button
             variant="default"
             size="sm"

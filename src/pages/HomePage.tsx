@@ -98,9 +98,9 @@ export const HomePage: React.FC = () => {
         <div className="flex flex-col items-center justify-center text-center space-y-6 max-w-4xl mx-auto px-4">
           {/* Hero Main Headline */}
           <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.05] drop-shadow-xl">
-            Curated Luxury Expeditions.
+            Timeless Voyages.
             <br />
-            <span className="text-white/80 font-normal">Timeless Voyages Beyond.</span>
+            <span className="text-white/80 font-normal">Luxury Beyond Horizons.</span>
           </h1>
 
           {/* Hero Subtitle Matter */}
