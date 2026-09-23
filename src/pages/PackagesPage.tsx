@@ -228,17 +228,17 @@ export const PackagesPage: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="pt-4 border-t border-neutral-100 flex items-center justify-between gap-4 mt-4">
-                    <div className="text-xs text-neutral-500 font-mono">
+                  <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-4 mt-4">
+                    <div className="text-xs text-white/60 font-mono">
                       <span>Departure: </span>
-                      <strong className="text-black font-semibold">{pkg.departureDates[0]}</strong>
+                      <strong className="text-white font-semibold">{pkg.departureDates[0]}</strong>
                     </div>
 
                     <Link to={`/packages/${pkg.id}`}>
                       <Button
                         variant="default"
                         size="sm"
-                        className="rounded-full gap-2 text-xs font-bold bg-black text-white hover:bg-neutral-800 h-10 px-5 shadow-sm"
+                        className="rounded-full gap-2 text-xs font-bold bg-white text-black hover:bg-neutral-100 h-10 px-5 shadow-sm"
                       >
                         <span>View Itinerary</span>
                         <Icon name="arrow_forward" size={14} />

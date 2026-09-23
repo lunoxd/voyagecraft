@@ -39,7 +39,7 @@ export const BookingModal: React.FC = () => {
     if (currentUser?.email && !travelerEmail) {
       setTravelerEmail(currentUser.email);
     }
-  }, [currentUser]);
+  }, [currentUser, travelerName, travelerEmail]);
 
   React.useEffect(() => {
     if (selectedPackage && selectedPackage.departureDates.length > 0) {

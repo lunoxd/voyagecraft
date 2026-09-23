@@ -8,14 +8,14 @@ export const Navbar: React.FC = () => {
   const { setIsSignInModalOpen, setIsSignUpModalOpen } = useStore();
 
   const mainLinks = [
-    { path: '/packages', label: 'Features' },
-    { path: '/about', label: 'About' },
-    { path: '/bookings', label: 'Bookings' },
+    { path: '/packages', label: 'Expeditions' },
+    { path: '/about', label: 'Ethos' },
+    { path: '/bookings', label: 'Reservations' },
   ];
 
   return (
     <>
-      {/* Floating React-Bits Style Frosted Glass Navbar Capsule */}
+      {/* Floating VoyageCraft Frosted Glass Navbar Capsule */}
       <header className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-4xl">
         <div className="bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-2xl sm:rounded-full px-5 sm:px-7 py-3 flex items-center justify-between gap-4 transition-all duration-300">
           
@@ -24,8 +24,8 @@ export const Navbar: React.FC = () => {
             <div className="h-7 w-7 rounded-full bg-white/15 border border-white/25 text-white flex items-center justify-center font-bold shadow-xs p-1">
               <BrandLogo size={16} className="text-white" />
             </div>
-            <span className="text-base font-bold tracking-tight text-white">
-              React Bits
+            <span className="text-base font-bold tracking-tight text-white uppercase tracking-wider">
+              VoyageCraft
             </span>
           </Link>
 

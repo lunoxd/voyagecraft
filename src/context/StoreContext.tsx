@@ -28,6 +28,7 @@ import {
 } from '../data/initialData';
 import { generateId } from '../lib/utils';
 import { api } from '../services/api';
+import { JWT_SECRET } from '../lib/supabase';
 import confetti from 'canvas-confetti';
 
 interface StoreContextType {
@@ -163,26 +164,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     setReviews(prev => [created, ...prev]);
     addLog('REVIEW-SERVICE', 'SUCCESS', `New verified review registered for PNR ${newRev.pnr} (${newRev.tourName})`);
+    api.createReview(created).catch(e => console.warn('Supabase review sync error:', e));
   }, [addLog]);
 
-  // Fetch live backend data from Spring Boot REST API
+  // Fetch live backend data from Supabase DB
   useEffect(() => {
     async function loadDynamicBackendData() {
       try {
         const pkgsRes = await api.getPackages();
         if (pkgsRes.success && Array.isArray(pkgsRes.data) && pkgsRes.data.length > 0) {
           setPackages(pkgsRes.data);
-          addLog("PACKAGE-SERVICE", "SUCCESS", `Retrieved ${pkgsRes.data.length} packages dynamically from SQL database.`);
+          addLog("PACKAGE-SERVICE", "SUCCESS", `Retrieved ${pkgsRes.data.length} packages dynamically from Supabase Postgres.`);
         }
 
         const bkgRes = await api.getBookings();
         if (bkgRes.success && Array.isArray(bkgRes.data) && bkgRes.data.length > 0) {
           setBookings(bkgRes.data);
+          addLog("BOOKING-SERVICE", "SUCCESS", `Loaded ${bkgRes.data.length} live bookings from Supabase.`);
         }
 
         const txnRes = await api.getTransactions();
         if (txnRes.success && Array.isArray(txnRes.data) && txnRes.data.length > 0) {
           setTransactions(txnRes.data);
+        }
+
+        const revsRes = await api.getReviews();
+        if (revsRes.success && Array.isArray(revsRes.data) && revsRes.data.length > 0) {
+          setReviews(revsRes.data);
         }
       } catch (err) {
         console.warn("Backend dynamic load fallback to local store:", err);
@@ -212,8 +220,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
     const payloadEncoded = btoa(JSON.stringify(payload));
-    const mockSig = btoa(`sig-${user.id}-${Date.now()}`).substring(0, 32);
-    const token = `${header}.${payloadEncoded}.${mockSig}`;
+    const signature = btoa(`${payloadEncoded}.${JWT_SECRET || 'voyagecraft_secret'}`).substring(0, 32);
+    const token = `${header}.${payloadEncoded}.${signature}`;
+    localStorage.setItem('vc_token', token);
 
     return { token, payload };
   };
@@ -378,6 +387,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setBookings(prev => [newBooking, ...prev]);
     setTransactions(prev => [newTxn, ...prev]);
+
+    // Persist to Supabase Database
+    try {
+      api.createBooking(newBooking).catch(e => console.warn('Supabase booking sync error:', e));
+      api.createTransaction(newTxn).catch(e => console.warn('Supabase transaction sync error:', e));
+    } catch (e) {
+      console.warn('Supabase booking dispatch error:', e);
+    }
 
     addLog("SAGA-ORCHESTRATOR", "SUCCESS", `Distributed transaction committed for PNR ${pnr}. Total: ₹${totalAmount.toLocaleString('en-IN')}`, { traceId });
 

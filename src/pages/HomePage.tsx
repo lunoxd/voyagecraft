@@ -3,145 +3,202 @@ import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { Badge } from '../components/ui/badge';
 import { Icon } from '../components/ui/icon';
+import { BrandLogo } from '../components/ui/BrandLogo';
 import { Masonry, type MasonryItem } from '../components/ui/Masonry';
 import { FlowingMenu, type FlowingMenuItem } from '../components/ui/FlowingMenu';
 import { formatCurrency } from '../lib/utils';
 
-const MASONRY_ITEMS: MasonryItem[] = [
+const FALLBACK_MASONRY_ITEMS: MasonryItem[] = [
   {
     id: '1',
     img: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?q=80&w=1200&auto=format&fit=crop',
-    url: '/package/PKG-EUR-01',
-    height: 700,
+    url: '/packages/PKG-EUR-01',
+    height: 720,
   },
   {
     id: '2',
     img: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1200&auto=format&fit=crop',
-    url: '/package/PKG-JPN-02',
-    height: 500,
+    url: '/packages/PKG-JPN-02',
+    height: 440,
   },
   {
     id: '3',
     img: 'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?q=80&w=1200&auto=format&fit=crop',
-    url: '/package/PKG-NOR-03',
-    height: 800,
+    url: '/packages/PKG-NOR-03',
+    height: 820,
   },
   {
     id: '4',
     img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1200&auto=format&fit=crop',
-    url: '/package/PKG-ALP-04',
-    height: 540,
+    url: '/packages/PKG-ALP-04',
+    height: 520,
   },
   {
     id: '5',
     img: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop',
     url: '/packages',
-    height: 620,
+    height: 640,
   },
   {
     id: '6',
     img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1200&auto=format&fit=crop',
     url: '/packages',
-    height: 480,
+    height: 460,
   },
   {
     id: '7',
     img: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1200&auto=format&fit=crop',
-    url: '/package/PKG-JPN-02',
-    height: 750,
+    url: '/packages/PKG-JPN-02',
+    height: 760,
   },
   {
     id: '8',
     img: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=1200&auto=format&fit=crop',
-    url: '/package/PKG-EUR-01',
-    height: 560,
-  },
-];
-
-const FLOWING_MENU_ITEMS: FlowingMenuItem[] = [
-  {
-    link: '/package/PKG-EUR-01',
-    text: 'Swiss Alps & Venice',
-    image: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?q=80&w=600&h=400&fit=crop',
-  },
-  {
-    link: '/package/PKG-JPN-02',
-    text: 'Kyoto Sanctuary & Shinkansen',
-    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=600&h=400&fit=crop',
-  },
-  {
-    link: '/package/PKG-NOR-03',
-    text: 'Lofoten Arctic Auroras',
-    image: 'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?q=80&w=600&h=400&fit=crop',
-  },
-  {
-    link: '/package/PKG-ALP-04',
-    text: 'Dolomites Alpine Chalets',
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=600&h=400&fit=crop',
-  },
-  {
-    link: '/packages',
-    text: 'Mediterranean Yachting',
-    image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=600&h=400&fit=crop',
+    url: '/packages/PKG-EUR-01',
+    height: 540,
   },
 ];
 
 export const HomePage: React.FC = () => {
   const { packages } = useStore();
 
+  // Dynamically map from live Supabase packages
+  const flowingMenuItems: FlowingMenuItem[] = packages.length > 0
+    ? packages.map((pkg) => ({
+        link: `/packages/${pkg.id}`,
+        text: pkg.title.split('&')[0].trim(),
+        image: pkg.imageUrl || 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?q=80&w=600&h=400&fit=crop'
+      }))
+    : [
+        {
+          link: '/packages',
+          text: 'Swiss Alps & Venice',
+          image: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?q=80&w=600&h=400&fit=crop',
+        },
+        {
+          link: '/packages',
+          text: 'Kyoto Sanctuary & Shinkansen',
+          image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=600&h=400&fit=crop',
+        },
+        {
+          link: '/packages',
+          text: 'Lofoten Arctic Auroras',
+          image: 'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?q=80&w=600&h=400&fit=crop',
+        },
+        {
+          link: '/packages',
+          text: 'Dolomites Alpine Chalets',
+          image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=600&h=400&fit=crop',
+        }
+      ];
+
+  const masonryItems: MasonryItem[] = packages.length > 0
+    ? packages.map((pkg, idx) => ({
+        id: pkg.id,
+        img: pkg.imageUrl || FALLBACK_MASONRY_ITEMS[idx % FALLBACK_MASONRY_ITEMS.length].img,
+        url: `/packages/${pkg.id}`,
+        height: [720, 440, 820, 520, 640, 460][idx % 6]
+      }))
+    : FALLBACK_MASONRY_ITEMS;
+
   return (
-    <div className="relative space-y-28 py-6 font-sans">
-      {/* Hero Section with React Bits Interactive Photo Masonry Grid */}
-      <section className="relative z-10 pt-6 sm:pt-14 pb-8 space-y-12">
-        <div className="flex flex-col items-center justify-center text-center space-y-6 max-w-4xl mx-auto px-4">
-          {/* Top Pill Badge */}
-          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/20 text-xs text-white shadow-xl">
-            <span className="px-2 py-0.5 rounded-full bg-white text-black font-bold text-[10px] tracking-wider uppercase">
-              NEW SEASON
-            </span>
-            <span className="font-medium tracking-tight">2026/2027 Private Luxury Expeditions</span>
-          </div>
-
-          {/* Hero Main Headline */}
-          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.05] drop-shadow-xl">
-            Curated Journeys.
-            <br />
-            <span className="text-white/80 font-normal">Soft Motion Luxury.</span>
-          </h1>
-
-          {/* Hero Subtitle Matter */}
-          <p className="text-base sm:text-xl text-white/90 font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-md">
-            Handcrafted trans-continental circuits across the Swiss Alps, Kyoto, Lofoten, and Dolomites with real-time seat lock escrows and instantaneous booking.
-          </p>
-
-          {/* Action Triggers */}
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
-            <Link to="/packages">
-              <button className="bg-white text-black font-semibold text-sm sm:text-base px-8 py-3.5 rounded-2xl shadow-2xl hover:bg-neutral-100 hover:scale-102 transition-all cursor-pointer flex items-center gap-2">
-                <span>Explore Expeditions</span>
-                <Icon name="arrow_forward" size={16} />
-              </button>
-            </Link>
-            <Link to="/about">
-              <button className="bg-white/15 backdrop-blur-xl text-white border border-white/25 font-medium text-sm sm:text-base px-8 py-3.5 rounded-2xl hover:bg-white/25 transition-all cursor-pointer">
-                Our Craft &amp; Ethos
-              </button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Full React Bits Interactive Masonry Photo Grid with Hover Zoom & Blur */}
-        <div className="w-full pt-4">
+    <div className="relative space-y-28 py-2 font-sans">
+      {/* Hero Section with Full-Screen Interactive Photo Masonry Grid Under Hero Text */}
+      <section className="relative z-10 w-full max-w-[1540px] mx-auto px-2 sm:px-4 flex items-center justify-center">
+        {/* Full React Bits Interactive Masonry Photo Grid Layer */}
+        <div className="relative w-full">
           <Masonry
-            items={MASONRY_ITEMS}
+            items={masonryItems}
             ease="power3.out"
             duration={0.6}
             stagger={0.05}
             animateFrom="bottom"
             scaleOnHover={true}
-            hoverScale={0.95}
-            blurToFocus={true}
+            hoverScale={0.96}
+            blurToFocus={false}
             colorShiftOnHover={false}
+          />
+        </div>
+
+        {/* Hero Text Content Positioned Directly ON the Images */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center space-y-6 max-w-4xl mx-auto px-4 py-8 pointer-events-none z-20">
+          {/* Top Pill Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/80 backdrop-blur-xl border border-white/20 text-xs text-white shadow-2xl pointer-events-auto">
+            <div className="h-5 w-5 rounded-full bg-white text-black flex items-center justify-center p-0.5 shadow-sm">
+              <BrandLogo size={13} className="text-black" />
+            </div>
+            <span className="font-bold tracking-wider uppercase text-[11px]">
+              VOYAGECRAFT
+            </span>
+            <span className="text-white/40">•</span>
+            <span className="font-medium text-white/90 tracking-tight">Curated Luxury Expeditions</span>
+          </div>
+
+          {/* Hero Main Headline */}
+          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.05]">
+            <span className="[text-shadow:_0_2px_16px_rgba(0,0,0,0.65),_0_4px_30px_rgba(0,0,0,0.5)]">
+              Curated Journeys.
+            </span>
+            <br />
+            <span className="text-white/95 font-normal [text-shadow:_0_2px_18px_rgba(0,0,0,0.75),_0_4px_32px_rgba(0,0,0,0.55)]">
+              Soft Motion Luxury.
+            </span>
+          </h1>
+
+          {/* Hero Subtitle Matter */}
+          <p className="text-base sm:text-xl text-white font-normal max-w-2xl mx-auto leading-relaxed [text-shadow:_0_2px_8px_rgba(0,0,0,0.9),_0_4px_20px_rgba(0,0,0,0.8)]">
+            Handcrafted trans-continental circuits across the Swiss Alps, Kyoto, Lofoten, and Dolomites with real-time seat lock escrows and instantaneous booking.
+          </p>
+
+          {/* Action Triggers */}
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2 pointer-events-auto">
+            <Link to="/packages">
+              <button className="bg-white text-black font-semibold text-sm sm:text-base px-8 py-3.5 rounded-2xl shadow-2xl hover:bg-neutral-100 hover:scale-105 transition-all cursor-pointer flex items-center gap-2">
+                <span>Explore Expeditions</span>
+                <Icon name="arrow_forward" size={16} />
+              </button>
+            </Link>
+            <Link to="/about">
+              <button className="bg-black/60 backdrop-blur-xl text-white border border-white/30 font-medium text-sm sm:text-base px-8 py-3.5 rounded-2xl hover:bg-black/80 transition-all cursor-pointer shadow-xl">
+                Our Craft &amp; Ethos
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive Flowing Menu Showcase */}
+      <section className="relative z-10 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2.5 py-0.5 rounded-full bg-white/20 border border-white/30 text-white text-[10px] font-bold font-mono tracking-wider uppercase backdrop-blur-md">
+                EXPEDITION CIRCUITS
+              </span>
+              <span className="text-xs font-mono text-white/60 uppercase tracking-wider">VoyageCraft</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white uppercase">
+              Circuit Directory
+            </h2>
+            <p className="text-xs sm:text-sm text-white/70 mt-1 max-w-xl">
+              Hover along the compass directions to reveal kinetic panoramic previews and direct booking routes.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-mono text-white/80 bg-white/10 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20 shrink-0 shadow-lg">
+            <Icon name="navigation" size={14} className="text-white" />
+            <span>Hover across rows to reveal motion marquee</span>
+          </div>
+        </div>
+
+        <div className="relative h-[440px] sm:h-[480px] rounded-3xl overflow-hidden border border-white/15 shadow-2xl bg-neutral-950/70 backdrop-blur-xl">
+          <FlowingMenu
+            items={flowingMenuItems}
+            speed={14}
+            bgColor="rgba(19, 34, 37, 0.7)"
+            textColor="#f5f5f5"
+            marqueeBgColor="#ffffff"
+            marqueeTextColor="#132225"
+            borderColor="rgba(255, 255, 255, 0.15)"
           />
         </div>
       </section>
@@ -243,42 +300,6 @@ export const HomePage: React.FC = () => {
               </div>
             );
           })}
-        </div>
-      </section>
-
-      {/* Interactive Flowing Menu Showcase from React Bits */}
-      <section className="relative z-10 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full bg-white/20 border border-white/30 text-white text-[10px] font-bold font-mono tracking-wider uppercase backdrop-blur-md">
-                Interactive Marquee
-              </span>
-              <span className="text-xs font-mono text-white/60 uppercase tracking-wider">React Bits</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white uppercase">
-              Circuit Directory
-            </h2>
-            <p className="text-xs sm:text-sm text-white/70 mt-1 max-w-xl">
-              Hover along the compass directions to reveal kinetic panoramic previews and direct booking routes.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 text-xs font-mono text-white/80 bg-white/10 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20 shrink-0 shadow-lg">
-            <Icon name="navigation" size={14} className="text-white" />
-            <span>Hover across rows to reveal motion marquee</span>
-          </div>
-        </div>
-
-        <div className="relative h-[440px] sm:h-[480px] rounded-3xl overflow-hidden border border-white/15 shadow-2xl bg-neutral-950/70 backdrop-blur-xl">
-          <FlowingMenu
-            items={FLOWING_MENU_ITEMS}
-            speed={14}
-            bgColor="rgba(19, 34, 37, 0.7)"
-            textColor="#f5f5f5"
-            marqueeBgColor="#ffffff"
-            marqueeTextColor="#132225"
-            borderColor="rgba(255, 255, 255, 0.15)"
-          />
         </div>
       </section>
 
