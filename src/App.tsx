@@ -28,14 +28,12 @@ import FooterSection from './components/FooterSection';
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
-  const isManageRoute = location.pathname === '/admin/manage';
+  const isManageRoute = location.pathname === '/admin/manage' || location.pathname === '/admin/manage/';
 
   if (isManageRoute) {
     return (
       <div className="min-h-screen bg-white text-black font-mono">
-        <Routes>
-          <Route path="/admin/manage" element={<AdminManagePage />} />
-        </Routes>
+        <AdminManagePage />
       </div>
     );
   }

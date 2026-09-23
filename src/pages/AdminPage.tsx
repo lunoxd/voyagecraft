@@ -1,44 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
 import { Icon } from '../components/ui/icon';
-import { MetricCard } from '../components/ui/metric-card';
-import { BadgeGroup } from '../components/ui/badge-group';
-import { FeaturedIcon } from '../components/ui/featured-icon';
-import { Avatar } from '../components/ui/avatar';
-import { EurekaConsole } from '../components/EurekaConsole';
-import { GatewayConsole } from '../components/GatewayConsole';
-import { SagaVisualizer } from '../components/SagaVisualizer';
-import { TestSuite } from '../components/TestSuite';
-import { LogStream } from '../components/LogStream';
 import { api } from '../services/api';
-import { ADMIN_EMAILS } from '../lib/supabase';
-import type { UserRole } from '../types';
+import { formatCurrency } from '../lib/utils';
 
 export const AdminPage: React.FC = () => {
   const {
     currentUser,
     setCurrentUserRole,
-    jwtToken,
-    decodedJWT,
-    microservices,
-    gatewayRoutes,
-    bookings,
     packages,
-    reviews,
-    rubrics,
-    simulateTrafficBurst,
+    bookings,
+    transactions,
+    microservices,
     setIsAddPackageModalOpen,
-    setIsRubricsModalOpen,
-    runIntegrationTests
   } = useStore();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'admins' | 'rubrics' | 'jwt' | 'eureka' | 'gateway' | 'saga' | 'tests' | 'logs'>('overview');
-  const [copiedToken, setCopiedToken] = useState(false);
+  const [activeTab, setActiveTab] = useState<'packages' | 'admins' | 'bookings'>('packages');
 
-  // Admin Team Management State
+  // Admin management
   const [usersList, setUsersList] = useState<any[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminName, setNewAdminName] = useState('');
@@ -46,7 +26,10 @@ export const AdminPage: React.FC = () => {
   const [adminSuccessMsg, setAdminSuccessMsg] = useState('');
   const [adminErrorMsg, setAdminErrorMsg] = useState('');
 
-  React.useEffect(() => {
+  const totalInstances = microservices.reduce((acc, s) => acc + s.instances.length, 0);
+  const upInstances = microservices.reduce((acc, s) => acc + s.instances.filter(i => i.status === 'UP').length, 0);
+
+  useEffect(() => {
     async function loadUsers() {
       const res = await api.getUsers();
       if (res.success && res.data) {
@@ -86,530 +69,187 @@ export const AdminPage: React.FC = () => {
     setUsersList(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
   };
 
-  const handleCopyToken = () => {
-    navigator.clipboard.writeText(jwtToken);
-    setCopiedToken(true);
-    setTimeout(() => setCopiedToken(false), 2000);
+  const handleSignOut = () => {
+    localStorage.removeItem('vc_token');
+    localStorage.removeItem('vc_user');
+    setCurrentUserRole('TRAVELER');
   };
 
-  const isStaffOrAdmin = currentUser.role === 'ADMIN' || currentUser.role === 'AGENT' || currentUser.role === 'DEVOPS';
-
-  const roleDefinitions: { role: UserRole; title: string; desc: string; accessLevel: string }[] = [
-    {
-      role: 'ADMIN',
-      title: 'Administrator',
-      desc: 'Full cluster authority, tour creation, ledger verification, and route security.',
-      accessLevel: 'Level 4 - Full Admin'
-    },
-    {
-      role: 'AGENT',
-      title: 'Travel Concierge Agent',
-      desc: 'Reservation management, booking hold locks, and customer itinerary assistance.',
-      accessLevel: 'Level 3 - Operator'
-    },
-    {
-      role: 'DEVOPS',
-      title: 'DevOps & SRE Engineer',
-      desc: 'Service instances scaling, Eureka health telemetry, and gateway rate limiting.',
-      accessLevel: 'Level 4 - Infrastructure'
-    },
-    {
-      role: 'TRAVELER',
-      title: 'End Traveler (Customer)',
-      desc: 'Public catalog browsing, personal booking checkout, and ticket receipts.',
-      accessLevel: 'Level 1 - Public User'
-    }
-  ];
-
-  const totalInstances = microservices.reduce((acc, s) => acc + s.instances.length, 0);
-  const upInstances = microservices.reduce((acc, s) => acc + s.instances.filter(i => i.status === 'UP').length, 0);
-
   return (
-    <div className="space-y-8 py-6 max-w-7xl mx-auto overflow-hidden font-sans">
-      {/* Top Untitled UI Badge Group Announcement & Section Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-neutral-200 pb-6">
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <BadgeGroup
-              badge="STAFF PORTAL"
-              message={`Live Cluster Telemetry • Role: ${currentUser.role}`}
-              variant="brand"
-              showArrow={false}
-            />
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono text-[10px] font-bold">
-              24SDCS03R &bull; 60/60 Pts Verified
-            </span>
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-neutral-950 uppercase">
-            Operations &amp; Admin Console
-          </h1>
-          <p className="text-sm text-neutral-600 max-w-2xl">
-            Centralized administration suite for Bearer JWT security tokens, Eureka service discovery, API Gateway routing, and distributed Saga transactions.
-          </p>
-        </div>
-
-        {/* Quick Cluster Actions */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Link to="/admin/manage">
-            <Button
-              variant="default"
-              size="sm"
-              className="rounded-full text-xs font-bold h-10 px-4 bg-black hover:bg-neutral-800 text-white gap-1.5 shadow-sm"
-            >
-              <Icon name="terminal" size={16} />
-              <span>Dev Console (/admin/manage)</span>
-            </Button>
-          </Link>
-
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => setIsRubricsModalOpen(true)}
-            className="rounded-full text-xs font-bold h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-sm"
-          >
-            <Icon name="verified" size={16} />
-            <span>KLEF Rubrics Review 1</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={simulateTrafficBurst}
-            className="rounded-full text-xs font-bold h-10 px-4 border-neutral-300 hover:border-black gap-1.5 bg-white shadow-2xs"
-            title="Simulate sudden booking traffic across microservices"
-          >
-            <Icon name="bolt" size={16} />
-            <span>Simulate Traffic Spike</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => runIntegrationTests()}
-            className="rounded-full text-xs font-bold h-10 px-4 border-neutral-300 hover:border-black gap-1.5 bg-white shadow-2xs"
-          >
-            <Icon name="play_arrow" size={16} />
-            <span>Run Test Suite</span>
-          </Button>
-
-          {currentUser.role === 'ADMIN' && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setIsAddPackageModalOpen(true)}
-              className="rounded-full text-xs font-bold h-10 px-5 bg-black text-white hover:bg-neutral-800 gap-1.5 shadow-sm"
-            >
-              <Icon name="add" size={16} />
-              <span>Add Package</span>
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Staff Scope & Identity Card */}
-      <div className="p-5 rounded-3xl bg-neutral-50 border border-neutral-200/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs">
-        <div className="flex items-center gap-3">
-          <Avatar initials={currentUser.avatar || 'AW'} size="md" status="online" />
-          <div>
-            <div className="text-xs font-mono font-bold text-neutral-900 flex items-center gap-1.5">
-              <span>{currentUser.name}</span>
-              <Badge variant="brand" className="text-[9px] py-0">{currentUser.role}</Badge>
+    <div className="max-w-7xl mx-auto py-6 font-sans">
+      {/* Plain White Card Container */}
+      <div className="bg-white text-black p-6 sm:p-10 rounded-3xl border border-neutral-200 shadow-2xl space-y-8">
+        
+        {/* Top Header Bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-neutral-200">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <span className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse"></span>
+              <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
+                Admin Panel
+              </h1>
             </div>
-            <p className="text-[11px] text-neutral-500 font-mono">
-              {currentUser.email} &bull; Spring Security JWT Verified
+            <p className="text-xs sm:text-sm text-neutral-600">
+              Manage tour packages, add administrators, view reservations, and inspect microservices.
             </p>
           </div>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] font-mono text-neutral-500 font-semibold mr-1">Switch Simulated Role:</span>
-          {(['ADMIN', 'AGENT', 'DEVOPS', 'TRAVELER'] as const).map((r) => {
-            const isSelected = currentUser.role === r;
-            return (
-              <button
-                key={r}
-                onClick={() => setCurrentUserRole(r)}
-                className={`px-3 py-1 rounded-full text-xs font-mono transition-all cursor-pointer ${
-                  isSelected
-                    ? 'bg-black text-white font-bold shadow-sm'
-                    : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-100 hover:text-black'
-                }`}
-              >
-                {r}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Traveler Role Warning / Notice */}
-      {!isStaffOrAdmin && (
-        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Icon name="warning" size={18} className="text-amber-700 shrink-0" />
-            <span>
-              <strong>Limited Traveler View:</strong> You are currently viewing as an individual traveler. Switch to <strong>ADMIN</strong>, <strong>AGENT</strong>, or <strong>DEVOPS</strong> above to test privileged operations.
-            </span>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setCurrentUserRole('ADMIN')}
-            className="rounded-full text-xs font-bold bg-white text-amber-950 border-amber-300 hover:bg-amber-100 shrink-0"
-          >
-            Switch to ADMIN
-          </Button>
-        </div>
-      )}
-
-      {/* Navigation Tabs */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-2 border-b border-neutral-200 scrollbar-none">
-        {[
-          { id: 'overview', label: 'Cluster Overview', icon: 'dashboard' },
-          { id: 'admins', label: 'Admin Team & Access', icon: 'admin_panel_settings' },
-          { id: 'rubrics', label: 'Project Review 1 (60/60 Pts)', icon: 'verified' },
-          { id: 'jwt', label: 'JWT & Security Tools', icon: 'key' },
-          { id: 'eureka', label: 'Eureka Discovery', icon: 'hub' },
-          { id: 'gateway', label: 'API Gateway & Routes', icon: 'alt_route' },
-          { id: 'saga', label: 'Saga Transactions', icon: 'sync_alt' },
-          { id: 'tests', label: 'Automated Tests', icon: 'fact_check' },
-          { id: 'logs', label: 'Cluster Logs', icon: 'terminal' },
-        ].map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-black text-white font-bold shadow-sm'
-                  : 'text-neutral-600 hover:text-black hover:bg-neutral-100'
-              }`}
-            >
-              <Icon name={tab.icon} size={15} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tab 1: Overview */}
-      {activeTab === 'overview' && (
-        <div className="space-y-8">
-          {/* Untitled UI Metric Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              label="Active Microservices"
-              value={`${upInstances} / ${totalInstances}`}
-              change="+100%"
-              trend="up"
-              subtext="Eureka Registry Healthy"
-              icon="hub"
-              progressPercent={(upInstances / Math.max(1, totalInstances)) * 100}
-            />
-
-            <MetricCard
-              label="API Gateway Routes"
-              value={gatewayRoutes.length}
-              change="0% Dropped"
-              trend="neutral"
-              subtext="Circuit Breaker Closed"
-              icon="alt_route"
-              progressPercent={100}
-            />
-
-            <MetricCard
-              label="Total Reservations"
-              value={bookings.length}
-              change="+14.2%"
-              trend="up"
-              subtext="SQL Database Persisted"
-              icon="confirmation_number"
-              progressPercent={75}
-            />
-
-            <MetricCard
-              label="Active Tour Catalog"
-              value={packages.length}
-              change="Zero-Overbooking"
-              trend="up"
-              subtext="Atomic Row Locks"
-              icon="travel_explore"
-              progressPercent={100}
-            />
-          </div>
-
-          {/* Quick Tool Launch Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div
-              onClick={() => setActiveTab('jwt')}
-              className="p-6 rounded-3xl bg-white border border-neutral-200/90 shadow-xs hover:shadow-md hover:border-black transition-all cursor-pointer space-y-4 group"
-            >
-              <FeaturedIcon name="key" size="lg" variant="brand" theme="light" />
-              <div className="space-y-1">
-                <h3 className="font-bold text-base text-black group-hover:underline">
-                  JWT Bearer &amp; RBAC Tool &rarr;
-                </h3>
-                <p className="text-xs text-neutral-600 leading-relaxed">
-                  Inspect signed RFC 7519 Bearer tokens, decode role-based claims, and simulate permission scopes.
-                </p>
+          {/* User Status & Black Action Buttons */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="px-3.5 py-1.5 rounded-full bg-neutral-100 border border-neutral-200 text-xs text-neutral-800 font-medium flex items-center gap-2">
+              <div className="h-6 w-6 rounded-full bg-black text-white flex items-center justify-center font-bold text-[10px]">
+                {currentUser.avatar || currentUser.name.substring(0, 2).toUpperCase()}
               </div>
-            </div>
-
-            <div
-              onClick={() => setActiveTab('eureka')}
-              className="p-6 rounded-3xl bg-white border border-neutral-200/90 shadow-xs hover:shadow-md hover:border-black transition-all cursor-pointer space-y-4 group"
-            >
-              <FeaturedIcon name="hub" size="lg" variant="success" theme="light" />
-              <div className="space-y-1">
-                <h3 className="font-bold text-base text-black group-hover:underline">
-                  Eureka Discovery Registry &rarr;
-                </h3>
-                <p className="text-xs text-neutral-600 leading-relaxed">
-                  Monitor live cluster nodes, trigger failover simulation, and dynamically spawn microservice instances.
-                </p>
-              </div>
-            </div>
-
-            <div
-              onClick={() => setActiveTab('gateway')}
-              className="p-6 rounded-3xl bg-white border border-neutral-200/90 shadow-xs hover:shadow-md hover:border-black transition-all cursor-pointer space-y-4 group"
-            >
-              <FeaturedIcon name="alt_route" size="lg" variant="warning" theme="light" />
-              <div className="space-y-1">
-                <h3 className="font-bold text-base text-black group-hover:underline">
-                  Spring Cloud Edge Gateway &rarr;
-                </h3>
-                <p className="text-xs text-neutral-600 leading-relaxed">
-                  Configure path patterns, adjust per-minute rate limits, inspect circuit breakers, and monitor traffic metrics.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Real Customer Feedback & Verified Booking Ledger */}
-          <div className="p-8 rounded-3xl bg-white border border-neutral-200/90 shadow-xs space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-200 pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="brand" className="text-[10px] font-mono">REAL DATA ENGINE</Badge>
-                  <span className="text-xs font-mono text-neutral-500">Atomic PNR Verified Feedback</span>
-                </div>
-                <h3 className="text-2xl font-black text-black tracking-tight mt-1">
-                  Verified Traveler Reviews Ledger
-                </h3>
-              </div>
-              <span className="text-xs font-mono text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 font-bold">
-                {reviews.length} Verified Customer Submissions
+              <span>{currentUser.email}</span>
+              <span className="px-2 py-0.5 rounded-full bg-black text-white text-[10px] font-bold">
+                {currentUser.role}
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {reviews.map((rev) => (
-                <div key={rev.id} className="p-5 rounded-2xl bg-neutral-50/90 border border-neutral-200/80 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-black text-sm">{rev.author}</span>
-                        <span className="px-2 py-0.5 rounded-full bg-black text-white font-mono text-[9px]">PNR: {rev.pnr}</span>
-                      </div>
-                      <span className="text-[11px] text-neutral-500 font-mono">{rev.location} &bull; {rev.date}</span>
-                    </div>
-                    <div className="flex items-center gap-0.5 text-amber-500">
-                      {[...Array(rev.rating)].map((_, i) => (
-                        <Icon key={i} name="star" size={14} />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-xs font-bold text-indigo-900 bg-indigo-50/80 px-2.5 py-1 rounded-lg border border-indigo-100/80">
-                    {rev.tourName}
-                  </div>
-                  <p className="text-xs text-neutral-700 leading-relaxed italic">
-                    "{rev.comment}"
-                  </p>
-                </div>
-              ))}
-            </div>
+            <button
+              onClick={() => setIsAddPackageModalOpen(true)}
+              className="bg-black text-white font-bold text-xs px-5 py-2.5 rounded-2xl hover:bg-neutral-800 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+            >
+              <Icon name="add" size={16} />
+              <span>Add New Tour</span>
+            </button>
+
+            <Link to="/admin/manage">
+              <button className="bg-black text-white font-bold text-xs px-5 py-2.5 rounded-2xl hover:bg-neutral-800 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm">
+                <Icon name="terminal" size={16} />
+                <span>Dev / Eureka View</span>
+              </button>
+            </Link>
+
+            <button
+              onClick={handleSignOut}
+              className="border border-neutral-300 text-neutral-700 hover:text-black hover:border-black font-semibold text-xs px-4 py-2.5 rounded-2xl transition-all cursor-pointer"
+            >
+              Sign Out
+            </button>
           </div>
         </div>
-      )}
 
-      {/* Tab: Admin Team & Access Management */}
-      {activeTab === 'admins' && (
-        <div className="space-y-8">
-          {/* Top Banner Notice */}
-          <div className="p-6 rounded-3xl bg-neutral-900 text-white space-y-4 shadow-xl border border-neutral-800">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-white text-black font-mono text-[10px] font-bold uppercase">
-                    RBAC ACCESS CONTROL
-                  </span>
-                  <span className="text-xs font-mono text-white/60">Supabase SQL Persisted</span>
-                </div>
-                <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
-                  Administrator &amp; Staff Directory
-                </h3>
-                <p className="text-xs sm:text-sm text-white/70 max-w-2xl">
-                  Authorized administrators possess unrestricted privileges to manage tours, review live financial ledgers, inspect microservices, and grant role permissions.
-                </p>
-              </div>
-
-              {/* Environment Variable Admins Badge */}
-              <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15 shrink-0 max-w-sm">
-                <div className="text-[10px] font-mono text-white/60 uppercase mb-1">Configured in .env:</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {ADMIN_EMAILS.map((adminEmail) => (
-                    <span key={adminEmail} className="px-2.5 py-1 rounded-full bg-white text-black text-xs font-bold font-mono shadow-xs">
-                      {adminEmail}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+        {/* Quick Summary Metrics Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="p-5 rounded-2xl bg-neutral-50 border border-neutral-200 space-y-1">
+            <div className="text-xs text-neutral-500 font-medium">Tour Packages</div>
+            <div className="text-2xl sm:text-3xl font-black text-black">{packages.length}</div>
+            <div className="text-[11px] text-neutral-600">Active in catalog</div>
           </div>
 
-          {/* Add New Admin Form */}
-          <div className="p-8 rounded-3xl bg-white border border-neutral-200 shadow-xs space-y-6">
-            <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
-              <div>
-                <h4 className="text-lg font-black text-black uppercase tracking-tight flex items-center gap-2">
-                  <Icon name="person_add" size={20} className="text-neutral-800" />
-                  Grant New Administrator Privileges
-                </h4>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  Enter the email address of the team member to immediately grant full Administrator scope.
-                </p>
-              </div>
-            </div>
-
-            {adminSuccessMsg && (
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-2 font-medium">
-                <Icon name="check_circle" size={18} className="text-emerald-600 shrink-0" />
-                <span>{adminSuccessMsg}</span>
-              </div>
-            )}
-
-            {adminErrorMsg && (
-              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center gap-2 font-medium">
-                <Icon name="error" size={18} className="text-rose-600 shrink-0" />
-                <span>{adminErrorMsg}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleAddAdmin} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-neutral-600 font-mono uppercase">Admin Email *</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="e.g. colleague@gmail.com"
-                  value={newAdminEmail}
-                  onChange={(e) => setNewAdminEmail(e.target.value)}
-                  className="w-full h-11 px-4 rounded-2xl border border-neutral-300 text-xs font-mono focus:outline-none focus:border-black bg-neutral-50 focus:bg-white"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-neutral-600 font-mono uppercase">Full Name (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Sarah Jenkins"
-                  value={newAdminName}
-                  onChange={(e) => setNewAdminName(e.target.value)}
-                  className="w-full h-11 px-4 rounded-2xl border border-neutral-300 text-xs font-sans focus:outline-none focus:border-black bg-neutral-50 focus:bg-white"
-                />
-              </div>
-
-              <div className="space-y-1.5 flex flex-col justify-end">
-                <Button
-                  type="submit"
-                  disabled={isAddingAdmin}
-                  className="h-11 rounded-2xl bg-black text-white hover:bg-neutral-800 font-bold text-xs gap-2 shadow-sm cursor-pointer"
-                >
-                  <Icon name="admin_panel_settings" size={16} />
-                  <span>{isAddingAdmin ? 'Saving to Supabase...' : 'Authorize as Admin'}</span>
-                </Button>
-              </div>
-            </form>
+          <div className="p-5 rounded-2xl bg-neutral-50 border border-neutral-200 space-y-1">
+            <div className="text-xs text-neutral-500 font-medium">Total Bookings</div>
+            <div className="text-2xl sm:text-3xl font-black text-black">{bookings.length}</div>
+            <div className="text-[11px] text-neutral-600">Confirmed &amp; locked</div>
           </div>
 
-          {/* Registered Users & Staff Table */}
-          <div className="p-8 rounded-3xl bg-white border border-neutral-200 shadow-xs space-y-6">
-            <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
-              <div>
-                <h4 className="text-lg font-black text-black uppercase tracking-tight flex items-center gap-2">
-                  <Icon name="group" size={20} className="text-neutral-800" />
-                  Active System Users &amp; Role Permissions ({usersList.length})
-                </h4>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  Live user accounts stored in Supabase PostgreSQL `app_users` table.
-                </p>
-              </div>
+          <div className="p-5 rounded-2xl bg-neutral-50 border border-neutral-200 space-y-1">
+            <div className="text-xs text-neutral-500 font-medium">Transactions</div>
+            <div className="text-2xl sm:text-3xl font-black text-black">{transactions.length}</div>
+            <div className="text-[11px] text-neutral-600">Settled payments</div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-neutral-50 border border-neutral-200 space-y-1">
+            <div className="text-xs text-neutral-500 font-medium">Eureka Microservices</div>
+            <div className="text-2xl sm:text-3xl font-black text-black">{upInstances}/{totalInstances} UP</div>
+            <div className="text-[11px] text-emerald-600 font-semibold">Cluster operational</div>
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="flex border-b border-neutral-200 gap-2">
+          <button
+            onClick={() => setActiveTab('packages')}
+            className={`pb-3 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'packages'
+                ? 'border-black text-black'
+                : 'border-transparent text-neutral-500 hover:text-black'
+            }`}
+          >
+            <Icon name="explore" size={16} />
+            <span>Tour Packages ({packages.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('admins')}
+            className={`pb-3 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'admins'
+                ? 'border-black text-black'
+                : 'border-transparent text-neutral-500 hover:text-black'
+            }`}
+          >
+            <Icon name="group" size={16} />
+            <span>Admin Team &amp; Access</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('bookings')}
+            className={`pb-3 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'bookings'
+                ? 'border-black text-black'
+                : 'border-transparent text-neutral-500 hover:text-black'
+            }`}
+          >
+            <Icon name="confirmation_number" size={16} />
+            <span>Reservations ({bookings.length})</span>
+          </button>
+        </div>
+
+        {/* TAB 1: Tour Packages */}
+        {activeTab === 'packages' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-black">Active Tour Packages</h2>
+              <button
+                onClick={() => setIsAddPackageModalOpen(true)}
+                className="bg-black text-white font-bold text-xs px-4 py-2 rounded-xl hover:bg-neutral-800 transition-all cursor-pointer flex items-center gap-1"
+              >
+                <Icon name="add" size={14} />
+                <span>Create Tour</span>
+              </button>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto border border-neutral-200 rounded-2xl">
+              <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-neutral-200 text-neutral-500 font-mono uppercase text-[10px]">
-                    <th className="pb-3 font-semibold">User</th>
-                    <th className="pb-3 font-semibold">Email</th>
-                    <th className="pb-3 font-semibold">Current Role</th>
-                    <th className="pb-3 font-semibold">Authority Scope</th>
-                    <th className="pb-3 font-semibold text-right">Role Actions</th>
+                  <tr className="bg-neutral-100 border-b border-neutral-200 text-neutral-700 font-bold">
+                    <th className="p-3">Tour Code</th>
+                    <th className="p-3">Title</th>
+                    <th className="p-3">Base Price</th>
+                    <th className="p-3">Capacity</th>
+                    <th className="p-3">Booked / Left</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100 font-sans">
-                  {usersList.map((user) => {
-                    const isSuperAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
-                    const isAdmin = user.role === 'ADMIN' || isSuperAdmin;
-
+                <tbody className="divide-y divide-neutral-200">
+                  {packages.map((pkg) => {
+                    const availableSlots = Math.max(0, pkg.totalCapacity - pkg.bookedSlots - pkg.lockedSlots);
                     return (
-                      <tr key={user.id || user.email} className="hover:bg-neutral-50/80 transition-colors">
-                        <td className="py-3.5 pr-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="h-8 w-8 rounded-full bg-black text-white flex items-center justify-center font-bold text-xs font-mono">
-                              {user.avatar || user.name?.substring(0, 2).toUpperCase() || 'US'}
-                            </div>
-                            <span className="font-bold text-neutral-900">{user.name || user.email.split('@')[0]}</span>
-                          </div>
+                      <tr key={pkg.id} className="hover:bg-neutral-50">
+                        <td className="p-3 font-mono font-bold">{pkg.code}</td>
+                        <td className="p-3">
+                          <div className="font-bold text-black">{pkg.title}</div>
+                          <div className="text-neutral-500 text-[11px]">{pkg.subtitle}</div>
                         </td>
-                        <td className="py-3.5 pr-4 font-mono text-neutral-700">
-                          {user.email}
-                          {isSuperAdmin && (
-                            <span className="ml-2 px-2 py-0.5 rounded-full bg-neutral-900 text-white text-[9px] font-mono font-bold">
-                              ENV ADMIN
-                            </span>
-                          )}
+                        <td className="p-3 font-bold">{formatCurrency(pkg.basePrice)}</td>
+                        <td className="p-3 font-mono">{pkg.totalCapacity} seats</td>
+                        <td className="p-3 font-mono">
+                          <span className="font-bold text-black">{pkg.bookedSlots} booked</span>
+                          <span className="text-neutral-500"> ({availableSlots} left)</span>
                         </td>
-                        <td className="py-3.5 pr-4">
-                          <Badge
-                            variant={isAdmin ? "default" : user.role === 'AGENT' ? "brand" : user.role === 'DEVOPS' ? "outline" : "secondary"}
-                            className="rounded-full text-[10px] font-mono font-bold"
-                          >
-                            {isAdmin ? 'ADMIN' : user.role}
-                          </Badge>
+                        <td className="p-3">
+                          <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                            {pkg.status}
+                          </span>
                         </td>
-                        <td className="py-3.5 pr-4 text-neutral-500 text-[11px]">
-                          {isAdmin
-                            ? 'Full Cluster, Tours, & Ledger Access'
-                            : user.role === 'AGENT'
-                            ? 'Reservation Concierge & Customer PNRs'
-                            : user.role === 'DEVOPS'
-                            ? 'Service Scaling & Eureka Telemetry'
-                            : 'Standard Traveler Booking Access'}
-                        </td>
-                        <td className="py-3.5 text-right">
-                          <select
-                            value={isAdmin ? 'ADMIN' : user.role}
-                            onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                            className="h-8 px-2.5 rounded-xl border border-neutral-300 text-xs font-mono bg-white hover:border-black cursor-pointer"
-                          >
-                            <option value="ADMIN">ADMIN</option>
-                            <option value="AGENT">AGENT</option>
-                            <option value="DEVOPS">DEVOPS</option>
-                            <option value="TRAVELER">TRAVELER</option>
-                          </select>
+                        <td className="p-3 text-right">
+                          <Link to={`/packages/${pkg.id}`}>
+                            <button className="bg-black text-white text-[11px] font-bold px-3 py-1.5 rounded-xl hover:bg-neutral-800 cursor-pointer">
+                              View Page
+                            </button>
+                          </Link>
                         </td>
                       </tr>
                     );
@@ -618,176 +258,171 @@ export const AdminPage: React.FC = () => {
               </table>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Tab: Rubrics & Project Review 1 */}
-      {activeTab === 'rubrics' && (
-        <div className="space-y-6">
-          <div className="p-8 rounded-3xl bg-white border border-neutral-200/90 shadow-xs space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
+        {/* TAB 2: Admins & Team Management */}
+        {activeTab === 'admins' && (
+          <div className="space-y-6">
+            <div className="p-6 rounded-2xl bg-neutral-50 border border-neutral-200 space-y-4">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-mono text-[10px] font-bold">
-                    24SDCS03R &bull; SOA PROGRAMMING AND MICROSERVICES
-                  </span>
-                  <Badge variant="outline" className="font-mono text-[10px]">CLUSTER 1 &bull; REVIEW 1</Badge>
-                </div>
-                <h3 className="text-3xl font-black text-neutral-950 uppercase tracking-tight mt-1">
-                  Evaluation Rubrics &amp; Verification Matrix
-                </h3>
-                <p className="text-xs text-neutral-500 mt-1">
-                  Deep analysis, Eureka service discovery, JWT Bearer security, API Gateway routing, DTI LinkedIn article, and MOOCs verification.
+                <h3 className="text-base font-bold text-black">Grant Administrator Access</h3>
+                <p className="text-xs text-neutral-600">
+                  Add team members who have permission to manage tours and system settings.
                 </p>
               </div>
 
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => setIsRubricsModalOpen(true)}
-                className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold gap-1.5 shadow-sm shrink-0"
-              >
-                <Icon name="open_in_new" size={14} />
-                <span>Open Full Rubric Suite Modal</span>
-              </Button>
-            </div>
-
-            {/* Rubrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {rubrics.map((r) => (
-                <div key={r.id} className="p-6 rounded-3xl bg-neutral-50 border border-neutral-200/80 shadow-2xs space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-bold text-sm text-black">{r.title}</h4>
-                    <span className="px-2.5 py-1 rounded-full bg-emerald-600 text-white font-mono font-bold text-xs shrink-0">
-                      Level 5 &bull; {r.currentScore}/{r.maxScore} Pts
-                    </span>
-                  </div>
-                  <p className="text-xs text-neutral-600">{r.description}</p>
-                  
-                  <div className="space-y-1.5 pt-2 border-t border-neutral-200">
-                    <span className="text-[10px] font-mono text-neutral-500 font-bold uppercase">Evaluated Proof:</span>
-                    <ul className="space-y-1 text-xs text-neutral-700">
-                      {r.implementationDetails.map((det, idx) => (
-                        <li key={idx} className="flex items-start gap-1.5">
-                          <Icon name="check_circle" size={14} className="text-emerald-600 shrink-0 mt-0.5" />
-                          <span>{det}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="pt-2 font-mono text-[10px] text-neutral-500 flex flex-wrap gap-1">
-                    <span className="font-bold">Verified in:</span>
-                    {r.codeReferences.map((ref, idx) => (
-                      <span key={idx} className="px-2 py-0.5 rounded bg-white border border-neutral-200 text-neutral-700">
-                        {ref}
-                      </span>
-                    ))}
-                  </div>
+              {adminSuccessMsg && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-semibold">
+                  {adminSuccessMsg}
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+              )}
 
-      {/* Tab 2: JWT & Security Inspector */}
-      {activeTab === 'jwt' && (
-        <div className="space-y-6">
-          <div className="p-8 rounded-3xl bg-white border border-neutral-200/90 shadow-xs space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
-              <div className="flex items-center gap-3">
-                <FeaturedIcon name="security" size="md" variant="brand" theme="outline" />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="rounded-full text-[10px]">AUTH SERVICE</Badge>
-                    <span className="text-xs text-neutral-500 font-mono">RFC 7519 Compliant Bearer Tokens</span>
-                  </div>
-                  <h3 className="text-2xl font-black text-black tracking-tight mt-1">
-                    JWT Authentication &amp; RBAC Scope Inspector
-                  </h3>
+              {adminErrorMsg && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-900 text-xs font-semibold">
+                  {adminErrorMsg}
                 </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopyToken}
-                className="rounded-full h-9 text-xs px-4 gap-1.5 border-neutral-300 bg-white font-bold hover:border-black"
-              >
-                <Icon name={copiedToken ? "done" : "content_copy"} size={14} />
-                <span>{copiedToken ? "Token Copied!" : "Copy Bearer Token"}</span>
-              </Button>
+              )}
+
+              <form onSubmit={handleAddAdmin} className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="email"
+                  value={newAdminEmail}
+                  onChange={(e) => setNewAdminEmail(e.target.value)}
+                  placeholder="admin.email@gmail.com"
+                  required
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-neutral-300 bg-white text-xs focus:outline-none focus:border-black"
+                />
+                <input
+                  type="text"
+                  value={newAdminName}
+                  onChange={(e) => setNewAdminName(e.target.value)}
+                  placeholder="Full Name (optional)"
+                  className="sm:w-60 px-4 py-2.5 rounded-xl border border-neutral-300 bg-white text-xs focus:outline-none focus:border-black"
+                />
+                <button
+                  type="submit"
+                  disabled={isAddingAdmin}
+                  className="bg-black text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-neutral-800 transition-all cursor-pointer shrink-0 disabled:opacity-60"
+                >
+                  {isAddingAdmin ? "Adding..." : "+ Grant Admin Access"}
+                </button>
+              </form>
             </div>
 
-            {/* Role Cards */}
+            {/* Users Directory Table */}
             <div className="space-y-3">
-              <label className="text-xs font-bold text-neutral-700 uppercase font-mono">
-                Assigned Role Scopes:
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {roleDefinitions.map((rd) => {
-                  const isSelected = currentUser.role === rd.role;
-                  return (
-                    <button
-                      key={rd.role}
-                      onClick={() => setCurrentUserRole(rd.role)}
-                      className={`text-left p-4 rounded-2xl border transition-all cursor-pointer ${
-                        isSelected
-                          ? 'border-black bg-black text-white shadow-sm'
-                          : 'border-neutral-200 bg-neutral-50/70 hover:border-neutral-400 text-neutral-900'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className={`font-bold text-xs ${isSelected ? 'text-white' : 'text-black'}`}>{rd.title}</span>
-                        {isSelected && <Badge variant="secondary" className="rounded-full text-[9px] py-0 bg-white text-black font-bold">ACTIVE</Badge>}
-                      </div>
-                      <div className={`text-[10px] font-mono mb-2 ${isSelected ? 'text-neutral-300' : 'text-neutral-500'}`}>{rd.accessLevel}</div>
-                      <p className={`text-[11px] leading-relaxed ${isSelected ? 'text-neutral-300' : 'text-neutral-600'}`}>{rd.desc}</p>
-                    </button>
-                  );
-                })}
+              <h3 className="text-sm font-bold text-black">Active User &amp; Staff Directory</h3>
+              <div className="overflow-x-auto border border-neutral-200 rounded-2xl">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-neutral-100 border-b border-neutral-200 text-neutral-700 font-bold">
+                      <th className="p-3">User</th>
+                      <th className="p-3">Email Address</th>
+                      <th className="p-3">Current Role</th>
+                      <th className="p-3 text-right">Assign Role</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-200">
+                    {usersList.map((u) => (
+                      <tr key={u.id} className="hover:bg-neutral-50">
+                        <td className="p-3 font-bold flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-full bg-neutral-200 text-neutral-800 flex items-center justify-center font-bold text-xs">
+                            {u.avatar || u.name?.substring(0, 2).toUpperCase() || 'U'}
+                          </div>
+                          <span>{u.name || 'User'}</span>
+                        </td>
+                        <td className="p-3 font-mono">{u.email}</td>
+                        <td className="p-3">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                            u.role === 'ADMIN' ? 'bg-black text-white' : 'bg-neutral-100 text-neutral-800 border border-neutral-300'
+                          }`}>
+                            {u.role}
+                          </span>
+                        </td>
+                        <td className="p-3 text-right">
+                          <select
+                            value={u.role}
+                            onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                            className="px-2 py-1 rounded-lg border border-neutral-300 bg-white text-xs font-semibold focus:outline-none"
+                          >
+                            <option value="ADMIN">ADMIN</option>
+                            <option value="AGENT">AGENT</option>
+                            <option value="TRAVELER">TRAVELER</option>
+                            <option value="DEVOPS">DEVOPS</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                    {usersList.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="p-6 text-center text-neutral-500">
+                          Loading registered users from database...
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
-
-            {/* Encoded Token */}
-            <div className="space-y-2">
-              <span className="text-xs font-bold text-neutral-700 flex items-center gap-1.5 font-mono">
-                <Icon name="vpn_key" size={15} /> Encoded Bearer Token
-              </span>
-              <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl font-mono text-[11px] text-neutral-800 break-all select-all">
-                {jwtToken}
-              </div>
-            </div>
-
-            {/* Decoded Claims Payload */}
-            {decodedJWT && (
-              <div className="space-y-2">
-                <span className="text-xs font-bold text-neutral-700 flex items-center gap-1.5 font-mono">
-                  <Icon name="code" size={15} /> Decoded Claims (Payload)
-                </span>
-                <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl font-mono text-[11px] text-neutral-800 overflow-x-auto">
-                  <pre>{JSON.stringify(decodedJWT, null, 2)}</pre>
-                </div>
-              </div>
-            )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Tab 3: Eureka Discovery */}
-      {activeTab === 'eureka' && <EurekaConsole />}
+        {/* TAB 3: Reservations */}
+        {activeTab === 'bookings' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold text-black">Recent Reservations &amp; PNRs</h2>
+            <div className="overflow-x-auto border border-neutral-200 rounded-2xl">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-neutral-100 border-b border-neutral-200 text-neutral-700 font-bold">
+                    <th className="p-3">PNR</th>
+                    <th className="p-3">Traveler</th>
+                    <th className="p-3">Tour</th>
+                    <th className="p-3">Seats</th>
+                    <th className="p-3">Total Paid</th>
+                    <th className="p-3">Booking Status</th>
+                    <th className="p-3">Payment</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-200">
+                  {bookings.map((b) => (
+                    <tr key={b.id} className="hover:bg-neutral-50">
+                      <td className="p-3 font-mono font-bold">{b.pnr}</td>
+                      <td className="p-3">
+                        <div className="font-bold text-black">{b.travelerName}</div>
+                        <div className="text-neutral-500 text-[11px]">{b.travelerEmail}</div>
+                      </td>
+                      <td className="p-3 font-medium">{b.packageName}</td>
+                      <td className="p-3 font-mono">{b.seats} ({b.tier})</td>
+                      <td className="p-3 font-bold">{formatCurrency(b.totalAmount)}</td>
+                      <td className="p-3">
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                          {b.bookingStatus}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <span className="px-2.5 py-1 rounded-full bg-black text-white text-[10px] font-bold">
+                          {b.paymentStatus}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {bookings.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="p-6 text-center text-neutral-500">
+                        No active bookings yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
-      {/* Tab 4: API Gateway */}
-      {activeTab === 'gateway' && <GatewayConsole />}
-
-      {/* Tab 5: Saga Orchestrator */}
-      {activeTab === 'saga' && <SagaVisualizer />}
-
-      {/* Tab 6: Automated Tests */}
-      {activeTab === 'tests' && <TestSuite />}
-
-      {/* Tab 7: Cluster Logs */}
-      {activeTab === 'logs' && <LogStream />}
+      </div>
     </div>
   );
 };
+
+export default AdminPage;

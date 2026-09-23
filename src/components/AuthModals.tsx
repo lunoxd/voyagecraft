@@ -29,7 +29,7 @@ const GoogleIcon: React.FC<{ className?: string }> = ({ className = "h-4 w-4" })
 );
 
 export const SignInModal: React.FC = () => {
-  const { isSignInModalOpen, setIsSignInModalOpen, setIsSignUpModalOpen, setCurrentUserRole, addLog } = useStore();
+  const { currentUser, isSignInModalOpen, setIsSignInModalOpen, setIsSignUpModalOpen, setCurrentUserRole, addLog } = useStore();
 
   const [email, setEmail] = useState('alexander.wright@voyagecraft.internal');
   const [password, setPassword] = useState('Password123!');
@@ -38,6 +38,8 @@ export const SignInModal: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const isAuthenticated = Boolean(currentUser && currentUser.email);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +79,13 @@ export const SignInModal: React.FC = () => {
     }
   };
 
+  const handleSignOut = () => {
+    localStorage.removeItem('vc_token');
+    localStorage.removeItem('vc_user');
+    setCurrentUserRole('TRAVELER');
+    setIsSignInModalOpen(false);
+  };
+
   const switchToSignUp = () => {
     setIsSignInModalOpen(false);
     setIsSignUpModalOpen(true);
@@ -87,112 +96,157 @@ export const SignInModal: React.FC = () => {
       <DialogHeader>
         <div className="flex items-center justify-between mb-1">
           <Badge variant="outline" className="rounded-full text-[10px] font-mono">AUTH SERVICE</Badge>
-          <span className="text-[11px] font-mono text-neutral-500">SQL &amp; JWT Authenticated</span>
+          <span className="text-[11px] font-mono text-neutral-500">VoyageCraft Cloud</span>
         </div>
-        <DialogTitle className="text-2xl font-black text-black">Sign In to VoyageCraft</DialogTitle>
+        <DialogTitle className="text-2xl font-black text-black">
+          {isAuthenticated ? "Authenticated Session" : "Sign In to VoyageCraft"}
+        </DialogTitle>
         <DialogDescription className="text-xs text-neutral-500">
-          Access your traveler reservations or administrative control console.
+          {isAuthenticated
+            ? "You are currently logged into your account."
+            : "Access your traveler reservations or administrative control console."}
         </DialogDescription>
       </DialogHeader>
 
       <div className="space-y-4 pt-2">
-        {/* Google SSO Button */}
-        <button
-          type="button"
-          onClick={handleGoogleSignIn}
-          disabled={googleLoading || loading}
-          className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-2xl bg-white border border-neutral-300 hover:border-black hover:bg-neutral-50 transition-all font-sans font-semibold text-xs text-neutral-800 shadow-2xs cursor-pointer disabled:opacity-60"
-        >
-          {googleLoading ? (
-            <Icon name="progress_activity" size={16} className="animate-spin text-neutral-600" />
-          ) : (
-            <GoogleIcon />
-          )}
-          <span>{googleLoading ? "Authorizing Google..." : "Continue with Google"}</span>
-        </button>
-
-        <div className="relative flex items-center justify-center">
-          <div className="border-t border-neutral-200 w-full" />
-          <span className="bg-white px-3 text-[10px] font-mono text-neutral-500 uppercase shrink-0">
-            or sign in with email
-          </span>
-        </div>
-
-        <form onSubmit={handleSignIn} className="space-y-3.5 text-xs font-sans">
-          {errorMsg && (
-            <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center gap-2 font-medium">
-              <Icon name="error" size={16} className="text-rose-600" />
-              <span>{errorMsg}</span>
+        {isAuthenticated ? (
+          <div className="space-y-5 text-center py-3">
+            <div className="flex flex-col items-center justify-center space-y-2">
+              <div className="relative">
+                <div className="h-14 w-14 rounded-full bg-black text-white flex items-center justify-center font-bold text-lg shadow-md">
+                  {currentUser.avatar || currentUser.name?.substring(0, 2).toUpperCase() || 'U'}
+                </div>
+                <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white text-[10px]">
+                  ✓
+                </div>
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-black">{currentUser.name || 'Traveler'}</h4>
+                <p className="text-xs font-mono text-neutral-500">{currentUser.email}</p>
+                <div className="mt-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-black text-white text-[10px] font-bold">
+                    {currentUser.role}
+                  </span>
+                </div>
+              </div>
             </div>
-          )}
 
-          <div className="space-y-1">
-            <label className="text-neutral-700 font-semibold">Email Address</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@voyagecraft.internal"
-              className="bg-white border-neutral-200 h-10 text-xs"
-              required
-            />
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-neutral-700 font-semibold">Password</label>
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-[10px] font-mono text-neutral-500 hover:text-black cursor-pointer"
+            <div className="space-y-2 pt-2">
+              <Button
+                onClick={() => setIsSignInModalOpen(false)}
+                className="w-full rounded-2xl font-bold bg-black text-white hover:bg-neutral-800 text-xs h-10"
               >
-                {showPassword ? "Hide" : "Show"}
+                Continue Browsing &rarr;
+              </Button>
+              <button
+                onClick={handleSignOut}
+                className="w-full py-2 text-xs font-semibold text-neutral-600 hover:text-black transition-colors cursor-pointer"
+              >
+                Sign Out
               </button>
             </div>
-            <Input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="bg-white border-neutral-200 h-10 text-xs"
-              required
-            />
           </div>
-
-          <div className="space-y-1">
-            <label className="text-neutral-700 font-semibold">Role Profile</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as any)}
-              className="w-full h-10 rounded-xl border border-neutral-200 bg-white px-3 text-neutral-900 text-xs focus:outline-none focus:ring-1 focus:ring-black"
-            >
-              <option value="ADMIN">System Administrator (Full Authority)</option>
-              <option value="AGENT">Travel Concierge Agent</option>
-              <option value="TRAVELER">Individual Traveler</option>
-              <option value="DEVOPS">DevOps &amp; SRE Infrastructure</option>
-            </select>
-          </div>
-
-          <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-neutral-100">
+        ) : (
+          <>
+            {/* Google SSO Button */}
             <button
               type="button"
-              onClick={switchToSignUp}
-              className="text-xs text-neutral-500 hover:text-black underline cursor-pointer"
+              onClick={handleGoogleSignIn}
+              disabled={googleLoading || loading}
+              className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-2xl bg-white border border-neutral-300 hover:border-black hover:bg-neutral-50 transition-all font-sans font-semibold text-xs text-neutral-800 shadow-2xs cursor-pointer disabled:opacity-60"
             >
-              Need an account? Sign Up
+              {googleLoading ? (
+                <Icon name="progress_activity" size={16} className="animate-spin text-neutral-600" />
+              ) : (
+                <GoogleIcon />
+              )}
+              <span>{googleLoading ? "Authorizing Google..." : "Continue with Google"}</span>
             </button>
-            <Button type="submit" variant="default" className="rounded-full w-full sm:w-auto font-bold px-6 bg-black text-white hover:bg-neutral-800 text-xs h-10" disabled={loading || googleLoading}>
-              {loading ? "Verifying..." : "Sign In &rarr;"}
-            </Button>
-          </DialogFooter>
-        </form>
+
+            <div className="relative flex items-center justify-center">
+              <div className="border-t border-neutral-200 w-full" />
+              <span className="bg-white px-3 text-[10px] font-mono text-neutral-500 uppercase shrink-0">
+                or sign in with email
+              </span>
+            </div>
+
+            <form onSubmit={handleSignIn} className="space-y-3.5 text-xs font-sans">
+              {errorMsg && (
+                <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center gap-2 font-medium">
+                  <Icon name="error" size={16} className="text-rose-600" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <label className="text-neutral-700 font-semibold">Email Address</label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@voyagecraft.internal"
+                  className="bg-white border-neutral-200 h-10 text-xs"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-neutral-700 font-semibold">Password</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-[10px] font-mono text-neutral-500 hover:text-black cursor-pointer"
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="bg-white border-neutral-200 h-10 text-xs"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-neutral-700 font-semibold">Role Profile</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as any)}
+                  className="w-full h-10 rounded-xl border border-neutral-200 bg-white px-3 text-neutral-900 text-xs focus:outline-none focus:ring-1 focus:ring-black"
+                >
+                  <option value="ADMIN">System Administrator (Full Authority)</option>
+                  <option value="AGENT">Travel Concierge Agent</option>
+                  <option value="TRAVELER">Individual Traveler</option>
+                  <option value="DEVOPS">DevOps &amp; SRE Infrastructure</option>
+                </select>
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-neutral-100">
+                <button
+                  type="button"
+                  onClick={switchToSignUp}
+                  className="text-xs text-neutral-500 hover:text-black underline cursor-pointer"
+                >
+                  Need an account? Sign Up
+                </button>
+                <Button type="submit" variant="default" className="rounded-full w-full sm:w-auto font-bold px-6 bg-black text-white hover:bg-neutral-800 text-xs h-10" disabled={loading || googleLoading}>
+                  {loading ? "Verifying..." : "Sign In &rarr;"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </>
+        )}
       </div>
     </Dialog>
   );
 };
 
 export const SignUpModal: React.FC = () => {
-  const { isSignUpModalOpen, setIsSignUpModalOpen, setIsSignInModalOpen, setCurrentUserRole, addLog } = useStore();
+  const { currentUser, isSignUpModalOpen, setIsSignUpModalOpen, setIsSignInModalOpen, setCurrentUserRole, addLog } = useStore();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -202,6 +256,8 @@ export const SignUpModal: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const isAuthenticated = Boolean(currentUser && currentUser.email);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -244,6 +300,13 @@ export const SignUpModal: React.FC = () => {
     }
   };
 
+  const handleSignOut = () => {
+    localStorage.removeItem('vc_token');
+    localStorage.removeItem('vc_user');
+    setCurrentUserRole('TRAVELER');
+    setIsSignUpModalOpen(false);
+  };
+
   const switchToSignIn = () => {
     setIsSignUpModalOpen(false);
     setIsSignInModalOpen(true);
@@ -254,116 +317,161 @@ export const SignUpModal: React.FC = () => {
       <DialogHeader>
         <div className="flex items-center justify-between mb-1">
           <Badge variant="outline" className="rounded-full text-[10px] font-mono">USER REGISTRATION</Badge>
-          <span className="text-[11px] font-mono text-neutral-500">SQL Persisted</span>
+          <span className="text-[11px] font-mono text-neutral-500">VoyageCraft Cloud</span>
         </div>
-        <DialogTitle className="text-2xl font-black text-black">Create VoyageCraft Account</DialogTitle>
+        <DialogTitle className="text-2xl font-black text-black">
+          {isAuthenticated ? "Authenticated Session" : "Create VoyageCraft Account"}
+        </DialogTitle>
         <DialogDescription className="text-xs text-neutral-500">
-          Register your traveler or agent profile in the database.
+          {isAuthenticated
+            ? "You already have an active profile session."
+            : "Register your traveler or agent profile in the database."}
         </DialogDescription>
       </DialogHeader>
 
       <div className="space-y-4 pt-2">
-        {/* Google SSO Button */}
-        <button
-          type="button"
-          onClick={handleGoogleSignUp}
-          disabled={googleLoading || loading}
-          className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-2xl bg-white border border-neutral-300 hover:border-black hover:bg-neutral-50 transition-all font-sans font-semibold text-xs text-neutral-800 shadow-2xs cursor-pointer disabled:opacity-60"
-        >
-          {googleLoading ? (
-            <Icon name="progress_activity" size={16} className="animate-spin text-neutral-600" />
-          ) : (
-            <GoogleIcon />
-          )}
-          <span>{googleLoading ? "Authorizing Google..." : "Sign up with Google"}</span>
-        </button>
-
-        <div className="relative flex items-center justify-center">
-          <div className="border-t border-neutral-200 w-full" />
-          <span className="bg-white px-3 text-[10px] font-mono text-neutral-500 uppercase shrink-0">
-            or sign up with email
-          </span>
-        </div>
-
-        <form onSubmit={handleSignUp} className="space-y-3.5 text-xs font-sans">
-          {errorMsg && (
-            <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center gap-2 font-medium">
-              <Icon name="error" size={16} className="text-rose-600" />
-              <span>{errorMsg}</span>
+        {isAuthenticated ? (
+          <div className="space-y-5 text-center py-3">
+            <div className="flex flex-col items-center justify-center space-y-2">
+              <div className="relative">
+                <div className="h-14 w-14 rounded-full bg-black text-white flex items-center justify-center font-bold text-lg shadow-md">
+                  {currentUser.avatar || currentUser.name?.substring(0, 2).toUpperCase() || 'U'}
+                </div>
+                <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white text-[10px]">
+                  ✓
+                </div>
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-black">{currentUser.name || 'Traveler'}</h4>
+                <p className="text-xs font-mono text-neutral-500">{currentUser.email}</p>
+                <div className="mt-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-black text-white text-[10px] font-bold">
+                    {currentUser.role}
+                  </span>
+                </div>
+              </div>
             </div>
-          )}
 
-          <div className="space-y-1">
-            <label className="text-neutral-700 font-semibold">Full Name *</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Johnathan Doe"
-              className="bg-white border-neutral-200 h-10 text-xs"
-              required
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-neutral-700 font-semibold">Email Address *</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@example.com"
-              className="bg-white border-neutral-200 h-10 text-xs"
-              required
-            />
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-neutral-700 font-semibold">Password *</label>
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-[10px] font-mono text-neutral-500 hover:text-black cursor-pointer"
+            <div className="space-y-2 pt-2">
+              <Button
+                onClick={() => setIsSignUpModalOpen(false)}
+                className="w-full rounded-2xl font-bold bg-black text-white hover:bg-neutral-800 text-xs h-10"
               >
-                {showPassword ? "Hide" : "Show"}
+                Continue Browsing &rarr;
+              </Button>
+              <button
+                onClick={handleSignOut}
+                className="w-full py-2 text-xs font-semibold text-neutral-600 hover:text-black transition-colors cursor-pointer"
+              >
+                Sign Out &amp; Create New Account
               </button>
             </div>
-            <Input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="bg-white border-neutral-200 h-10 text-xs"
-              required
-            />
           </div>
-
-          <div className="space-y-1">
-            <label className="text-neutral-700 font-semibold">Role Assignment</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as any)}
-              className="w-full h-10 rounded-xl border border-neutral-200 bg-white px-3 text-neutral-900 text-xs focus:outline-none focus:ring-1 focus:ring-black"
-            >
-              <option value="TRAVELER">Individual Traveler</option>
-              <option value="AGENT">VoyageCraft Travel Agent</option>
-              <option value="ADMIN">Tour Administrator</option>
-              <option value="DEVOPS">DevOps &amp; Infrastructure</option>
-            </select>
-          </div>
-
-          <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-neutral-100">
+        ) : (
+          <>
+            {/* Google SSO Button */}
             <button
               type="button"
-              onClick={switchToSignIn}
-              className="text-xs text-neutral-500 hover:text-black underline cursor-pointer"
+              onClick={handleGoogleSignUp}
+              disabled={googleLoading || loading}
+              className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-2xl bg-white border border-neutral-300 hover:border-black hover:bg-neutral-50 transition-all font-sans font-semibold text-xs text-neutral-800 shadow-2xs cursor-pointer disabled:opacity-60"
             >
-              Already have an account? Sign In
+              {googleLoading ? (
+                <Icon name="progress_activity" size={16} className="animate-spin text-neutral-600" />
+              ) : (
+                <GoogleIcon />
+              )}
+              <span>{googleLoading ? "Authorizing Google..." : "Sign up with Google"}</span>
             </button>
-            <Button type="submit" variant="default" className="rounded-full w-full sm:w-auto font-bold px-6 bg-black text-white hover:bg-neutral-800 text-xs h-10" disabled={loading || googleLoading}>
-              {loading ? "Registering..." : "Sign Up &rarr;"}
-            </Button>
-          </DialogFooter>
-        </form>
+
+            <div className="relative flex items-center justify-center">
+              <div className="border-t border-neutral-200 w-full" />
+              <span className="bg-white px-3 text-[10px] font-mono text-neutral-500 uppercase shrink-0">
+                or sign up with email
+              </span>
+            </div>
+
+            <form onSubmit={handleSignUp} className="space-y-3.5 text-xs font-sans">
+              {errorMsg && (
+                <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center gap-2 font-medium">
+                  <Icon name="error" size={16} className="text-rose-600" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <label className="text-neutral-700 font-semibold">Full Name *</label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Johnathan Doe"
+                  className="bg-white border-neutral-200 h-10 text-xs"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-neutral-700 font-semibold">Email Address *</label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="bg-white border-neutral-200 h-10 text-xs"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-neutral-700 font-semibold">Password *</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-[10px] font-mono text-neutral-500 hover:text-black cursor-pointer"
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="bg-white border-neutral-200 h-10 text-xs"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-neutral-700 font-semibold">Role Assignment</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as any)}
+                  className="w-full h-10 rounded-xl border border-neutral-200 bg-white px-3 text-neutral-900 text-xs focus:outline-none focus:ring-1 focus:ring-black"
+                >
+                  <option value="TRAVELER">Individual Traveler</option>
+                  <option value="AGENT">VoyageCraft Travel Agent</option>
+                  <option value="ADMIN">Tour Administrator</option>
+                  <option value="DEVOPS">DevOps &amp; Infrastructure</option>
+                </select>
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-neutral-100">
+                <button
+                  type="button"
+                  onClick={switchToSignIn}
+                  className="text-xs text-neutral-500 hover:text-black underline cursor-pointer"
+                >
+                  Already have an account? Sign In
+                </button>
+                <Button type="submit" variant="default" className="rounded-full w-full sm:w-auto font-bold px-6 bg-black text-white hover:bg-neutral-800 text-xs h-10" disabled={loading || googleLoading}>
+                  {loading ? "Registering..." : "Sign Up &rarr;"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </>
+        )}
       </div>
     </Dialog>
   );
